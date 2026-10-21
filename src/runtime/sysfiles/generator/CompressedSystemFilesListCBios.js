@@ -18,6 +18,8 @@ wmsx.CompressedSystemFilesList = [
     "[RAMNormal].rom",
     "[RAMMapper].rom",
     "[ExtraPSG].rom",
+    "[Makoto].rom",
+    "[MegaFlashROMSCCPlusSD].rom",
     "[SCCExpansion].rom",
     "[SCCIExpansion].rom",
     "[PACExpansion].rom",

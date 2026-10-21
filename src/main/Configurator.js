@@ -46,8 +46,8 @@ wmsx.Configurator = {
         // Apply user asked page CSS
         if(WMSX.PAGE_BACK_CSS) document.body.style.background = WMSX.PAGE_BACK_CSS;
 
-        // Auto activate HardDrive Extension if not active and user trying to load HardDisk file
-        if ((WMSX.HARDDISK_URL || WMSX.HARDDISK_FILES_URL) && !WMSX.EXTENSIONS.HARDDISK)
+        // Auto activate HardDrive Extension if not active and user trying to load HardDisk file. MegaFlashROM SCC+ SD uses the HardDisk as its SD card
+        if ((WMSX.HARDDISK_URL || WMSX.HARDDISK_FILES_URL) && !WMSX.EXTENSIONS.HARDDISK && !WMSX.EXTENSIONS.MEGAFLASHSD)
             WMSX.EXTENSIONS.HARDDISK = 1;
 
         then();

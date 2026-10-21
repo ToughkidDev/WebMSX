@@ -60,6 +60,8 @@ wmsx.MultiDownloader = function (urlSpecs, onAllSuccess, onAnyError, timeout) {
     }
 
     function loadSuccess(urlSpec, f, content) {
+        var gunzipped = wmsx.Util.checkContentIsGZIP(content);
+        if (gunzipped) content = gunzipped;
         urlSpec.filesContent[f] = content;
         if (--urlSpec.filesToLoad > 0) return;                                   // Still some files to complete loading
 

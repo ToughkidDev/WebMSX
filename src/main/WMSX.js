@@ -164,10 +164,12 @@ WMSX.EXTENSIONS_CONFIG = {
     MSXMUSICX: {                        URL: "",                     SLOT: [0, 2] },
     OPL4:      { DESC: "OPL4 Wave",     URL: "@[OPL4].rom",          SLOT: [4, 1] },
     DOUBLEPSG: { DESC: "Double PSG",    URL: "@[ExtraPSG].rom",      SLOT: [4, 2] },
-    SCCI:      { DESC: "Konami SCC+",   URL: "@[SCCIExpansion].rom", SLOT: [1],    SLOT2: [2], CHANGE: { SCC:  0, PAC: 0, MEGARAM: 0 } },
-    SCC:       {                        URL: "@[SCCExpansion].rom",  SLOT: [1],    SLOT2: [2], CHANGE: { SCCI: 0, PAC: 0, MEGARAM: 0 } },
-    PAC:       { DESC: "PAC SRAM",      URL: "@[PACExpansion].rom",  SLOT: [1],    SLOT2: [2], CHANGE: { SCCI: 0, SCC: 0, MEGARAM: 0 } },
-    MEGARAM:   { DESC: "MegaRAM",       URL: "@[MegaRAM].rom",       SLOT: [1],    SLOT2: [2], CHANGE: { SCCI: 0, SCC: 0, PAC: 0 } }
+    SCCI:      { DESC: "Konami SCC+",   URL: "@[SCCIExpansion].rom", SLOT: [1],    SLOT2: [2], CHANGE: { SCC:  0, PAC: 0, MEGARAM: 0, MEGAFLASHSD: 0 } },
+    SCC:       {                        URL: "@[SCCExpansion].rom",  SLOT: [1],    SLOT2: [2], CHANGE: { SCCI: 0, PAC: 0, MEGARAM: 0, MEGAFLASHSD: 0 } },
+    PAC:       { DESC: "PAC SRAM",      URL: "@[PACExpansion].rom",  SLOT: [1],    SLOT2: [2], CHANGE: { SCCI: 0, SCC: 0, MEGARAM: 0, MEGAFLASHSD: 0 } },
+    MEGARAM:   { DESC: "MegaRAM",       URL: "@[MegaRAM].rom",       SLOT: [1],    SLOT2: [2], CHANGE: { SCCI: 0, SCC: 0, PAC: 0, MEGAFLASHSD: 0 } },
+    MEGAFLASHSD: { DESC: "MegaFlashROM SCC+ SD", URL: "@[MegaFlashROMSCCPlusSD].rom", FORMAT: "MegaFlashROMSCCPlusSD", SLOT: [1], SLOT2: [2], CHANGE: { SCCI: 0, SCC: 0, PAC: 0, MEGARAM: 0, HARDDISK: 0 } },
+    MAKOTO:    { DESC: "Makoto OPNA",   URL: "@[Makoto].rom",        SLOT: [2],    SLOT2: [1] }
 };
 
 WMSX.PRESETS_CONFIG = {
@@ -216,6 +218,12 @@ WMSX.PRESETS_CONFIG = {
 
     MEGARAM:  { "EXTENSIONS.MEGARAM": 1 },
     MEGARAM2: { "EXTENSIONS.MEGARAM": 2 },
+
+    MEGAFLASHSD:  { "EXTENSIONS.MEGAFLASHSD": 1 },
+    MEGAFLASHSD2: { "EXTENSIONS.MEGAFLASHSD": 2 },
+
+    MAKOTO:  { "EXTENSIONS.MAKOTO": 1 },
+    MAKOTO2: { "EXTENSIONS.MAKOTO": 2 },
 
     // Configuration Helper Presets
 

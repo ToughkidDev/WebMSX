@@ -338,6 +338,24 @@ wmsx.Util = new function() {
         return null;
     };
 
+    // Returns the uncompressed content if content is a GZIP file, or null
+    this.checkContentIsGZIP = function(content) {
+        if (!content || content.length < 18 || content[0] !== 0x1f || content[1] !== 0x8b || content[2] !== 0x08) return null;
+        try {
+            var flags = content[3];
+            var pos = 10;
+            if (flags & 0x04) pos += 2 + (content[pos] | (content[pos + 1] << 8));     // FEXTRA
+            if (flags & 0x08) while (content[pos++] !== 0) {}                          // FNAME
+            if (flags & 0x10) while (content[pos++] !== 0) {}                          // FCOMMENT
+            if (flags & 0x02) pos += 2;                                                 // FHCRC
+            var data = content.subarray ? content.subarray(pos, content.length - 8) : content.slice(pos, content.length - 8);
+            return JSZip.compressions.DEFLATE.uncompress(data);
+        } catch(ez) {
+            // Error decompressing. Abort
+        }
+        return null;
+    };
+
     this.getZIPFilesSorted = function(zip) {
         var files = zip.file(/.+/);
         files.sort(sortByName);

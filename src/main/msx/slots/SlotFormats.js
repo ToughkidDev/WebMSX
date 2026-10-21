@@ -337,6 +337,42 @@ wmsx.SlotFormats = {
         }
     },
 
+    "Makoto": {
+        name: "Makoto",
+        desc: "Makoto YM2608 OPNA Sound Cartridge",
+        priority: 1512,
+        internal: true,
+        embeddedURL: "@[Makoto].rom",
+        priorityForRom: function (rom) {
+            // Only 0K content. Must be selected via info format hint
+            return (rom.content.length === 0) ? this.priority : null;
+        },
+        createFromROM: function (rom) {
+            return new wmsx.CartridgeMakoto(rom);
+        },
+        recreateFromSaveState: function (state, previousSlot) {
+            return wmsx.CartridgeMakoto.recreateFromSaveState(state, previousSlot);
+        }
+    },
+
+    "MegaFlashROMSCCPlusSD": {
+        name: "MegaFlashROMSCCPlusSD",
+        desc: "MegaFlashROM SCC+ SD Cartridge",
+        priority: 1513,
+        internal: true,
+        embeddedURL: "@[MegaFlashROMSCCPlusSD].rom",
+        priorityForRom: function (rom) {
+            // Empty Flash or initial Flash content up to 8MB. Must be selected via info format hint
+            return (rom.content.length <= 0x800000) ? this.priority : null;
+        },
+        createFromROM: function (rom) {
+            return new wmsx.CartridgeMegaFlashROMSCCPlusSD(rom);
+        },
+        recreateFromSaveState: function (state, previousSlot) {
+            return wmsx.CartridgeMegaFlashROMSCCPlusSD.recreateFromSaveState(state, previousSlot);
+        }
+    },
+
     "MegaRAM": {
         name: "MegaRAM",
         desc: "MegaRAM Mapper Cartridge",

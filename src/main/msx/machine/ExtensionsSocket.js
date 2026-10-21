@@ -42,7 +42,7 @@ wmsx.ExtensionsSocket = function(machine) {
 
         var hasOp2 = !!conf.SLOT2;
         var loaded = slotSocket.slotInserted(op2 && hasOp2 ? conf.SLOT2 : conf.SLOT);
-        return !!loaded && loaded.rom.source === conf.URL;
+        return !!loaded && (loaded.rom.source === conf.URL || (!!conf.FORMAT && !!loaded.format && loaded.format.name === conf.FORMAT));
     };
 
     this.activateExtension = function(ext, altPower, op2, skipMessage, internal) {
@@ -212,7 +212,7 @@ wmsx.ExtensionsSocket = function(machine) {
         return {
             url: config[ext].URL || "@[Empty].rom",
             onSuccess: function (res) {
-                fileLoader.loadFromContentAsSlot(res.url, res.content, op2 ? config[ext].SLOT2 : config[ext].SLOT, true, null, null, true);     // altPower, internal
+                fileLoader.loadFromContentAsSlot(res.url, res.content, op2 ? config[ext].SLOT2 : config[ext].SLOT, true, config[ext].FORMAT || null, null, true);     // altPower, format, internal
             }
         };
     }

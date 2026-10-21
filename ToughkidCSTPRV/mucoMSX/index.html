@@ -22,6 +22,12 @@
 
         <script src="wmsx.js"></script>
 
+        <script>
+            // mucoMSX defaults: MegaFlashROM SCC+ SD in Cartridge Slot 1, Makoto (YM2608) in Cartridge Slot 2
+            WMSX.EXTENSIONS_CONFIG.MEGAFLASHSD.URL = "systemroms/extensions/mfrsd.rom.gz";
+            WMSX.PRESETS_CONFIG._BASE._INCLUDE += ", MEGAFLASHSD, MAKOTO";
+        </script>
+
     </body>
 
 </html>

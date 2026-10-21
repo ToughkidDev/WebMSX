@@ -186,6 +186,14 @@ wmsx.BUS = function(machine, cpu) {
         devicesOutputPorts[port] = handler;
     };
 
+    this.getInputDevice = function(port) {
+        return devicesInputPorts[port];
+    };
+
+    this.getOutputDevice = function(port) {
+        return devicesOutputPorts[port];
+    };
+
     this.disconnectInputDevice = function(port, handler) {
         if (!handler || devicesInputPorts[port] === handler) devicesInputPorts[port] = deviceInputMissing;
     };

@@ -41,6 +41,8 @@ wmsx.CompressedSystemFilesList = [
     "DOS2Boot.zip",
     "NextorBoot.zip",
     "[OPL4].rom",
-    "[ExtraPSG].rom"
+    "[ExtraPSG].rom",
+    "[Makoto].rom",
+    "[MegaFlashROMSCCPlusSD].rom"
 
 ];

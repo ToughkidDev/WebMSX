@@ -534,6 +534,32 @@ wmsx.FileDiskDrive = function(room) {
         return true;
     };
 
+    this.readSectorToArray = function(drive, logicalSector, dest) {
+        if (!this.isDiskInserted(drive)) return false;
+        var dContent = getCurrentDisk(drive).content;
+        var startByte = logicalSector * BYTES_PER_SECTOR;
+
+        // Disk boundary check
+        if (startByte + BYTES_PER_SECTOR > dContent.length) return false;
+
+        for (var i = 0; i < BYTES_PER_SECTOR; i++) dest[i] = dContent[startByte + i];
+        return true;
+    };
+
+    this.writeSectorFromArray = function(drive, logicalSector, src) {
+        var disk = getCurrentDisk(drive);
+        if (!disk) return false;
+        var dContent = disk.content;
+        var startByte = logicalSector * BYTES_PER_SECTOR;
+
+        // Disk boundary check
+        if (startByte + BYTES_PER_SECTOR > dContent.length) return false;
+
+        for (var i = 0; i < BYTES_PER_SECTOR; i++) dContent[startByte + i] = src[i];
+        disk.modified = true;
+        return true;
+    };
+
     // Returns the extra time for motor to spin up (drive LED simulation)
     this.motorOn = function(drive) {
         if (driveMotorOffTimer[drive]) {
