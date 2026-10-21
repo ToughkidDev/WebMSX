@@ -328,7 +328,21 @@ wmsx.Configurator = {
                 onSuccess: function (res) {
                     WMSX.room.fileLoader.loadFromContent(res.url, res.content, OPEN_TYPE.TAPE, 0, true);
                 }
-            }
+            },
+            (WMSX.EXTENSIONS.MEGAFLASHSD && WMSX.MEGAFLASHSD_SD1_URL) ? {
+                url: WMSX.MEGAFLASHSD_SD1_URL,
+                asyncLoader: wmsx.SparseDiskImage.loadFromURL,
+                onSuccess: function (res) {
+                    wmsx.SparseDiskImage.sdCards[0] = res.content;
+                }
+            } : null,
+            (WMSX.EXTENSIONS.MEGAFLASHSD && WMSX.MEGAFLASHSD_SD2_URL) ? {
+                url: WMSX.MEGAFLASHSD_SD2_URL,
+                asyncLoader: wmsx.SparseDiskImage.loadFromURL,
+                onSuccess: function (res) {
+                    wmsx.SparseDiskImage.sdCards[1] = res.content;
+                }
+            } : null
         ];
     },
 

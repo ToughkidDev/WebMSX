@@ -1,7 +1,7 @@
 // MegaFlashROM SCC+ SD Cartridge (Manuel Pazos)
 // 8MB FlashROM (M29W640GB), SCC-I, PSG, internal Slot Expander, 512KB RAM Mapper and SD card interface (MegaSD, SPI)
 // Subslot 0: Recovery (16K), Subslot 1: MegaFlashROM SCC+ (multiple mappers), Subslot 2: 512K RAM Mapper, Subslot 3: MegaSD
-// SD card 1 uses the Hard Disk drive images. SD card 2 is empty
+// SD card 1 uses the Hard Disk drive image if inserted, else the MEGAFLASHSD_SD1_URL image. SD card 2 uses the MEGAFLASHSD_SD2_URL image
 // Ported from the openMSX implementation
 // 0x0000 - 0xffff
 
@@ -552,8 +552,8 @@ wmsx.CartridgeMegaFlashROMSCCPlusSD = function(rom) {
 
     // SD Card in SPI mode  -------------------------------------------
 
-    function SDCard(driveNum) {
-        this.driveNum = driveNum;
+    function SDCard(index) {
+        this.index = index;
         this.cmdBuf = [ 0, 0, 0, 0, 0, 0 ];
         this.sectorBuf = new Uint8Array(512);
         this.reset();
@@ -568,25 +568,25 @@ wmsx.CartridgeMegaFlashROMSCCPlusSD = function(rom) {
         this.currentByteInSector = 0;
     };
 
-    SDCard.prototype.drive = function() {
-        return this.driveNum >= 0 && diskDriveSocket ? diskDriveSocket.getDrive() : null;
-    };
-
-    SDCard.prototype.isInserted = function() {
-        var drive = this.drive();
-        return !!drive && drive.isDiskInserted(this.driveNum);
+    // SD card 1: Hard Disk drive image if inserted, else the configured SD image. SD card 2: the configured SD image
+    SDCard.prototype.storage = function() {
+        if (this.index === 0 && diskDriveSocket) {
+            var drive = diskDriveSocket.getDrive();
+            if (drive && drive.isDiskInserted(HARD_DISK_DRIVE)) return hardDiskStorage;
+        }
+        return wmsx.SparseDiskImage.sdCards[this.index] || null;
     };
 
     SDCard.prototype.nbSectors = function() {
-        return this.drive().getTotalSectorsAvailable(this.driveNum) || 0;
+        var storage = this.storage();
+        return storage ? storage.totalSectors : 0;
     };
 
     SDCard.prototype.readCurrentByteFromCurrentSector = function() {
         var result;
         if (this.currentByteInSector === -1) {
-            var drive = this.drive();
-            drive.motorFlash(this.driveNum);
-            result = drive.readSectorToArray(this.driveNum, this.currentSector, this.sectorBuf) ? SD_START_BLOCK_TOKEN : SD_DATA_ERROR_TOKEN_ERROR;
+            var storage = this.storage();
+            result = storage && storage.readSector(this.currentSector, this.sectorBuf) ? SD_START_BLOCK_TOKEN : SD_DATA_ERROR_TOKEN_ERROR;
         } else
             result = this.sectorBuf[this.currentByteInSector];
         this.currentByteInSector++;
@@ -594,8 +594,13 @@ wmsx.CartridgeMegaFlashROMSCCPlusSD = function(rom) {
         return result;
     };
 
+    SDCard.prototype.writeCurrentSector = function() {
+        var storage = this.storage();
+        return !!storage && storage.writeSector(this.currentSector, this.sectorBuf);
+    };
+
     SDCard.prototype.transfer = function(value, cs) {
-        if (!this.isInserted()) return 0xff;        // no card inserted
+        if (!this.storage()) return 0xff;           // no card inserted
         if (cs) return 0xff;                        // /CS is true: not for this chip
 
         // process output
@@ -636,8 +641,7 @@ wmsx.CartridgeMegaFlashROMSCCPlusSD = function(rom) {
                 if (this.currentByteInSector < 512) this.sectorBuf[this.currentByteInSector] = value;
                 this.currentByteInSector++;
                 if (this.currentByteInSector === 512 + 2) {
-                    this.drive().motorFlash(this.driveNum);
-                    response = this.drive().writeSectorFromArray(this.driveNum, this.currentSector, this.sectorBuf) ? SD_DRT_ACCEPTED : SD_DRT_WRITE_ERROR;
+                    response = this.writeCurrentSector() ? SD_DRT_ACCEPTED : SD_DRT_WRITE_ERROR;
                     this.mode = SD_COMMAND;
                     this.transferDelayCounter = 1;
                     this.responseQueue.push(response);
@@ -656,8 +660,7 @@ wmsx.CartridgeMegaFlashROMSCCPlusSD = function(rom) {
                     if (this.currentSector >= this.nbSectors())
                         response = SD_DRT_WRITE_ERROR;
                     else {
-                        this.drive().motorFlash(this.driveNum);
-                        if (this.drive().writeSectorFromArray(this.driveNum, this.currentSector, this.sectorBuf)) {
+                        if (this.writeCurrentSector()) {
                             this.currentByteInSector = -1;
                             this.currentSector++;
                         } else
@@ -784,7 +787,24 @@ wmsx.CartridgeMegaFlashROMSCCPlusSD = function(rom) {
 
     var bankRegsSubSlot3 = [ 0, 1, 0, 0 ];
     var selectedCard = 0;
-    var sdCards = [ new SDCard(2), new SDCard(-1) ];          // SD card 1 = Hard Disk drive, SD card 2 = empty
+    var sdCards = [ new SDCard(0), new SDCard(1) ];
+
+    // Hard Disk drive as SD card storage
+    var hardDiskStorage = {
+        get totalSectors() {
+            return diskDriveSocket.getDrive().getTotalSectorsAvailable(HARD_DISK_DRIVE) || 0;
+        },
+        readSector: function(sector, dest) {
+            var drive = diskDriveSocket.getDrive();
+            drive.motorFlash(HARD_DISK_DRIVE);
+            return drive.readSectorToArray(HARD_DISK_DRIVE, sector, dest);
+        },
+        writeSector: function(sector, src) {
+            var drive = diskDriveSocket.getDrive();
+            drive.motorFlash(HARD_DISK_DRIVE);
+            return drive.writeSectorFromArray(HARD_DISK_DRIVE, sector, src);
+        }
+    };
 
     var flashState = 0, flashCmd = [], flashVppWpPinLow = true;
     var flashContentName, flashModif = false;
@@ -818,6 +838,8 @@ wmsx.CartridgeMegaFlashROMSCCPlusSD = function(rom) {
         0x40: 0x50, 0x41: 0x52, 0x42: 0x49, 0x43: 0x31, 0x44: 0x33, 0x45: 0x00, 0x46: 0x02, 0x47: 0x04, 0x48: 0x01,
         0x49: 0x04, 0x4a: 0x00, 0x4b: 0x00, 0x4c: 0x01, 0x4d: 0xb5, 0x4e: 0xc5, 0x4f: 0x02, 0x50: 0x01
     };
+
+    var HARD_DISK_DRIVE = 2;
 
     var SD_COMMAND = 0, SD_READ = 1, SD_MULTI_READ = 2, SD_WRITE = 3, SD_MULTI_WRITE = 4;
     var SD_DRT_ACCEPTED = 0x05, SD_DRT_WRITE_ERROR = 0x0d;

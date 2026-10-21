@@ -17,6 +17,22 @@ wmsx.MultiDownloader = function (urlSpecs, onAllSuccess, onAnyError, timeout) {
         var url = urlSpec.url.trim();
         if (!url) return loadError(urlSpec, "Empty URL");
 
+        // Custom asynchronous loader, returning a Promise of the final content
+        if (urlSpec.asyncLoader) {
+            urlSpec.asyncLoader(url).then(
+                function(content) {
+                    urlSpec.success = true;
+                    urlSpec.content = content;
+                    if (urlSpec.onSuccess) urlSpec.onSuccess(urlSpec);
+                    checkFinish();
+                },
+                function(error) {
+                    loadError(urlSpec, error && error.message || error);
+                }
+            );
+            return;
+        }
+
         var urls = wmsx.EmbeddedFiles.isEmbeddedURL(url)
             ? [ url ]                             // Ignore any divider, will be treated by EmbeddedFiles
             : url.split(/\s*\|\s*/);              // Special "|" divider (several files to concat)

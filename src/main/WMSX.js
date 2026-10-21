@@ -18,6 +18,8 @@ WMSX = {
     DISKA_URL:                      "",                         // Disk Image file
     DISKB_URL:                      "",
     HARDDISK_URL:                   "",
+    MEGAFLASHSD_SD1_URL:            "",                         // SD card 1 image of the MegaFlashROM SCC+ SD (may be .gz). Used when no Hard Disk is inserted
+    MEGAFLASHSD_SD2_URL:            "",                         // SD card 2 image of the MegaFlashROM SCC+ SD (may be .gz)
     DISKA_FILES_URL:                "",                         // File to load into a Disk. For several files, use a ZIP file
     DISKB_FILES_URL:                "",
     HARDDISK_FILES_URL:             "",

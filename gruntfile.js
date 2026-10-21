@@ -152,6 +152,7 @@ module.exports = function (grunt) {
         "src/main/room/cassette/FileCassetteDeck.js",
         "src/main/room/disk/DiskImages.js",
         "src/main/room/disk/FileDiskDrive.js",
+        "src/main/room/disk/SparseDiskImage.js",
         "src/main/room/controls/PeripheralControls.js",
         "src/main/room/controls/DOMPeripheralControls.js",
         "src/main/room/netplay/NetServer.js",
