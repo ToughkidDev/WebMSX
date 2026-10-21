@@ -10,10 +10,11 @@ WebMSX 6.0.8 기반 웹 MSX 에뮬레이터입니다. 페이지 장식 없이 �
 | 카트리지 슬롯 2 | **Makoto (YM2608 OPNA)** | FM 6채널, SSG 3채널, 리듬 6종, ADPCM-B(256KB RAM), I/O 포트 `0x14`-`0x17` |
 
 - MegaFlashROM의 펌웨어는 `systemroms/extensions/mfrsd.rom.gz`에서 읽습니다.
-- **SD 카드 1, 2**에는 기본으로 `sdcards/sd1.img`, `sdcards/sd2.img`가 꽂힙니다. Nextor 2.1 FDISK 형식(MBR + FAT16 파티션 1개, 타입 `0x06`)으로 포맷된 빈 64MB 이미지이며, 부팅하면 B:, C: 드라이브로 잡힙니다.
+- **SD 카드 1, 2**에는 기본으로 `sdcards/sd1.img`, `sdcards/sd2.img`가 꽂힙니다. Nextor 2.1 FDISK 형식(MBR + FAT16 파티션 1개, 타입 `0x06`)으로 포맷된 64MB 이미지입니다.
+- SD 카드 1에는 플래시 ROM 디스크의 내용(Nextor, COMMAND2.COM, MultiMente 등)이 그대로 복사되어 있고, 루트의 `NEXTOR.DAT` 덕분에 **A: 드라이브로 잡혀 SD 카드 1에서 부팅**합니다. 드라이브 배치는 A: SD 카드 1, B: ROM 디스크, C: SD 카드 2(빈 디스크), D: 플로피입니다.
 - SD 이미지에 쓴 내용은 브라우저 메모리에만 남고, 페이지를 다시 열면 초기화됩니다.
 - 하단 바의 하드디스크 아이콘으로 이미지를 넣으면 SD 카드 1 대신 그 이미지를 씁니다.
-- `sdcards/mknextorsd.py`로 같은 형식의 이미지를 다시 만들 수 있습니다.
+- `sdcards/mknextorsd.py`로 같은 형식의 빈 이미지를 만들고(`python3 mknextorsd.py 64 sd1.img sd2.img`), `sdcards/copyromdisk.py`로 ROM 디스크 내용과 `NEXTOR.DAT`를 넣을 수 있습니다(`python3 copyromdisk.py ../systemroms/extensions/mfrsd.rom.gz sd1.img`).
 - 플래시에 쓴 내용은 페이지를 다시 열면 초기화됩니다. 보존하려면 카트리지 메뉴의 Flash 저장 기능으로 파일로 받아 두세요.
 - 설정 메뉴(톱니바퀴)의 확장 목록에서 두 카트리지를 켜고 끌 수 있습니다.
 
