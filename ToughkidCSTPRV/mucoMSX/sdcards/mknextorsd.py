@@ -1,4 +1,4 @@
-# Creates a Nextor FDISK style SD card image: MBR + one FAT16 partition using the whole device (gzip compressed)
+# Creates a Nextor FDISK style SD card image: MBR + one FAT16 partition using the whole device (gzip compressed if the name ends with .gz)
 # Mirrors Nextor 2.1 FDISK (v2.1.0, source/kernel/bank5/fdisk.c + fdisk2.c), as in the MegaFlashROM SCC+ SD firmware kernel:
 # AddAutoPartition, CreatePartition, CreateFatFileSystem, CreateFatBootSector. Partition type 6 (FAT16), no active flag
 import gzip, os, struct, sys
@@ -46,7 +46,7 @@ def make(path, device_sectors, serial):
 
     sectors = {0: mbr, first_abs: boot, first_abs + 1: fat0, first_abs + 1 + spf: fat0}
     zero = bytes(512 * 2048)
-    with gzip.open(path, 'wb', compresslevel=9) as f:
+    with (gzip.open(path, 'wb', compresslevel=9) if path.endswith('.gz') else open(path, 'wb')) as f:
         s = 0
         while s < device_sectors:
             if s in sectors:
@@ -56,6 +56,7 @@ def make(path, device_sectors, serial):
             f.write(zero[:n * 512]); s += n
     print(path, 'sectors', device_sectors, 'part', first_abs, part_sectors, 'spc', spc, 'spf', spf, 'clusters', clusters, 'fsTotal', total, 'bytes', os.path.getsize(path))
 
-DEVICE = 1024 * 1024 * 1024 // 512              # 1 GiB
-make(sys.argv[1], DEVICE, 0x1A2B3C4D)
-make(sys.argv[2], DEVICE, 0x5E6F7A8B)
+# Usage: mknextorsd.py <size in MB> <sd1.img> <sd2.img>
+DEVICE = int(sys.argv[1]) * 1024 * 1024 // 512
+make(sys.argv[2], DEVICE, 0x1A2B3C4D)
+make(sys.argv[3], DEVICE, 0x5E6F7A8B)
