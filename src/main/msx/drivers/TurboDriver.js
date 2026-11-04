@@ -131,7 +131,9 @@ wmsx.TurboDriver = function(bios) {
     this.switchedPortInput = function (port) {
         if (port !== 0x41) return 0xff;     // Only Panasonic MSX2+ Turbo port
 
-        var res = softTurboON ? 0x00 : 0x01;
+        // Bit 0 reads the current CPU speed: 0 = high speed (5.37 MHz), 1 = normal (3.58 MHz)
+        // The Z80B CPU always runs at least at 5.37 MHz, so it reads as high speed even if no software turned the turbo on
+        var res = softTurboON || machine.getZ80BMode() ? 0x00 : 0x01;
 
         // console.log("PANA Turbo read: " + res.toString(16));
 
