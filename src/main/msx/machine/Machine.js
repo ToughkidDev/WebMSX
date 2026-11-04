@@ -664,7 +664,7 @@ wmsx.Machine = function() {
     var fastBootCountdown = 0;
 
     var z80ClockMode =  WMSX.Z80_CLOCK_MODE < 0 ? 0 :  WMSX.Z80_CLOCK_MODE;
-    var z80BMode =      WMSX.Z80B_MODE >= 0 ? WMSX.Z80B_MODE === 1 : !!WMSX.userPreferences.current.z80B;      // Z80B CPU at 6 MHz
+    var z80BMode =      WMSX.Z80B_MODE >= 0 ? WMSX.Z80B_MODE === 1 : !!WMSX.userPreferences.current.z80B;      // Z80B CPU at 5.37 MHz
     var r800ClockMode = WMSX.R800_CLOCK_MODE < 0 ? 0 : WMSX.R800_CLOCK_MODE;
     var vdpClockMode =  WMSX.VDP_CLOCK_MODE < 0 ? 0 :  WMSX.VDP_CLOCK_MODE;
 
@@ -1196,7 +1196,7 @@ wmsx.Machine = function() {
                     var desc = z80ClockMode === 0 ? "Auto" + (multi !== 1 ? " " + multiDesc + "x" : "") : z80ClockMode === 1 && !z80BMode ? "Normal" : "" + multiDesc + "x" ;
                     return { label: desc, active: multi !== 1 };
                 case controls.Z80B_MODE:
-                    return { label: z80BMode ? "ON 6 MHz" : "OFF", active: z80BMode };
+                    return { label: z80BMode ? "5.37 MHz" : "OFF", active: z80BMode };
                 case controls.R800_CLOCK_MODE:
                     multi = cpu.getR800ClockMulti();
                     desc = r800ClockMode === 0 ? "Auto" + (multi !== 1 ? " " + multi + "x" : "") : r800ClockMode === 1 ? "Normal" : "" + multi + "x" ;

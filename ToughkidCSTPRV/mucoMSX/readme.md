@@ -20,11 +20,11 @@ WebMSX 6.0.8 기반 웹 MSX 에뮬레이터입니다. 페이지 장식 없이 �
 
 ## Z80B CPU 스위치
 
-어떤 MSX 기종을 고르든 CPU를 **Z80B(6MHz)**로 바꿔 실행할 수 있습니다.
+어떤 MSX 기종을 고르든 CPU를 **Z80B(5.37MHz)**로 바꿔 실행할 수 있습니다. MSX는 21.48MHz 마스터 클럭을 나눠 CPU 클럭을 만들기 때문에(÷6 = 3.58MHz, ÷4 = 5.37MHz), Z80B로 바꾼 MSX 터보 개조는 칩의 최대 정격인 6MHz가 아니라 5.37MHz로 동작합니다.
 
-- 하단 바의 톱니바퀴 → **Quick Options**의 **Z80B CPU** 항목에서 켜고 끕니다. 켜면 Z80 클럭이 3.58MHz 대신 6.00MHz가 됩니다.
+- 하단 바의 톱니바퀴 → **Quick Options**의 **Z80B CPU** 항목에서 켜고 끕니다. 켜면 Z80 클럭이 3.58MHz 대신 5.37MHz가 됩니다.
 - 설정은 브라우저에 저장되어 다음에 열 때도 유지되고, Machine Select로 기종을 바꿔도 그대로 적용됩니다.
-- Z80 CPU Clock을 2x(7.16MHz) 이상으로 직접 올리면 그 값이 우선합니다. 파나소닉 터보(5.37MHz)보다는 Z80B의 6MHz가 우선합니다.
+- Z80 CPU Clock을 2x(7.16MHz) 이상으로 직접 올리면 그 값이 우선합니다. 파나소닉 터보도 같은 5.37MHz이므로 둘 중 하나만 켜져 있어도 5.37MHz로 동작합니다.
 - turbo R에서는 Z80 모드일 때만 적용되고, R800 클럭에는 영향이 없습니다.
 
 ## ▶ 실행하기
@@ -54,7 +54,7 @@ URL 뒤에 파라미터를 붙여 기종이나 미디어를 지정할 수 있습
 | `?HARDDISK=<URL>` | SD 카드 1에 디스크 이미지 로드 |
 | `?MEGAFLASHSD_SD1_URL=<URL>` | SD 카드 1 이미지 지정 (`.gz` 가능) |
 | `?MEGAFLASHSD_SD2_URL=<URL>` | SD 카드 2 이미지 지정 (`.gz` 가능) |
-| `?Z80B_MODE=1` | Z80B CPU(6MHz)로 실행 (`0`이면 끔. 저장된 설정보다 우선) |
+| `?Z80B_MODE=1` | Z80B CPU(5.37MHz)로 실행 (`0`이면 끔. 저장된 설정보다 우선) |
 | `?EXTENSIONS.MAKOTO=0` | Makoto 빼고 실행 |
 | `?EXTENSIONS.MEGAFLASHSD=0` | MegaFlashROM SCC+ SD 빼고 실행 |
 

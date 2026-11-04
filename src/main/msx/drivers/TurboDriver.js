@@ -46,7 +46,7 @@ wmsx.TurboDriver = function(bios) {
         var vdpMode = machine.getVDPClockMode();
 
         var z80Multi = z80Mode === 0 && softTurbo && softTurboON ? WMSX.Z80_SOFT_TURBO_MULTI : z80Mode > 0 ? z80Mode : 1;
-        if (machine.getZ80BMode() && z80Multi < Z80B_MULTI) z80Multi = Z80B_MULTI;        // Z80B CPU runs at least at 6 MHz
+        if (machine.getZ80BMode() && z80Multi < Z80B_MULTI) z80Multi = Z80B_MULTI;        // Z80B CPU runs at least at 5.37 MHz
         machine.cpu.setZ80ClockMulti(z80Multi);
         machine.cpu.setR800ClockMulti(r800Mode);
         machine.vdp.setVDPTurboMulti(vdpMode === 0 && softTurbo && softTurboON ? WMSX.VDP_SOFT_TURBO_MULTI : vdpMode > 0 ? vdpMode : 1);
@@ -181,6 +181,6 @@ wmsx.TurboDriver = function(bios) {
 
     var M_TYPES = wmsx.Machine.MACHINE_TYPE;
 
-    var Z80B_MULTI = 6 / 3.579545;                     // Z80B CPU: 6 MHz instead of 3.58 MHz
+    var Z80B_MULTI = 1.5;                              // Z80B CPU: 5.37 MHz (21.48 MHz master clock / 4) instead of 3.58 MHz (/ 6)
 
 };
