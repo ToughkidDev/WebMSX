@@ -131,6 +131,7 @@ WMSX.userPreferences.defaults = function() {
         },
 
         vSynch: 1,                          // auto
+        z80B: false,                        // Z80B CPU (6 MHz) off
         crtFilter: -1,                      // auto
         crtScanlines: 0,                    // off
 

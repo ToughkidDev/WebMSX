@@ -44,7 +44,7 @@ wmsx.CPU = function() {
 
     this.reset = function() {
         r800 = false;
-        cpuCycles = 0; busCycles = 0; cpuToBusCycles = 0;
+        cpuCycles = 0; busCycles = 0; cpuToBusCycles = 0; cpuCyclesFrac = 0;
         ackINT = false; prefix = 0;
         T = 0; W = 0;
         opcode = 0; instruction = undefined;
@@ -106,7 +106,9 @@ wmsx.CPU = function() {
     this.busClockPulsesZ80 = function(busPulses) {
         if (z80BUSRQ) return;
 
-        var toCycle = cpuCycles + ((busPulses * clockMulti) | 0);
+        var cycles = busPulses * clockMulti + cpuCyclesFrac;       // Keep fractional cycles for non integer multipliers
+        cpuCyclesFrac = cycles - (cycles | 0);
+        var toCycle = cpuCycles + (cycles | 0);
         for (; cpuCycles < toCycle; ++cpuCycles) {
            if (--T > 0) continue;
            if (T < 0) {
@@ -120,7 +122,9 @@ wmsx.CPU = function() {
     this.busClockPulsesBoth = function(busPulses) {
         if (z80BUSRQ && !r800) return;
 
-        var toCycle = cpuCycles + ((busPulses * clockMulti) | 0);
+        var cycles = busPulses * clockMulti + cpuCyclesFrac;       // Keep fractional cycles for non integer multipliers
+        cpuCyclesFrac = cycles - (cycles | 0);
+        var toCycle = cpuCycles + (cycles | 0);
         for (; cpuCycles < toCycle; ++cpuCycles) {
             if (--T > 0) continue;
             if (T < 0) {
@@ -229,6 +233,7 @@ wmsx.CPU = function() {
     var clockMulti = z80ClockMulti;                         // active CPU multi
 
     var cpuCycles = 0, busCycles = 0, cpuToBusCycles = 0;
+    var cpuCyclesFrac = 0;
 
     // Extension Handling
     var extCurrRunning = null;

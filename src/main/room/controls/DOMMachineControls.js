@@ -221,7 +221,7 @@ wmsx.DOMMachineControls = function(room, peripheralControls) {
     var EXCLUDE_SHIFT_MASK = ~domKeys.SHIFT;
 
     var quickOptionsControls = new Set([
-        mc.VIDEO_STANDARD, mc.CPU_CLOCK_MODE, mc.Z80_CLOCK_MODE, mc.R800_CLOCK_MODE, mc.VDP_CLOCK_MODE, mc.SPRITE_MODE, mc.VSYNCH
+        mc.VIDEO_STANDARD, mc.CPU_CLOCK_MODE, mc.Z80_CLOCK_MODE, mc.R800_CLOCK_MODE, mc.VDP_CLOCK_MODE, mc.Z80B_MODE, mc.SPRITE_MODE, mc.VSYNCH
     ]);
 
     // User can issue control only on Server. Not sent to Client over network

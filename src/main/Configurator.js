@@ -193,6 +193,7 @@ wmsx.Configurator = {
         WMSX.HARDDISK_MIN_SIZE_KB |= 0;
         WMSX.MEGARAM_SIZE |= 0;
         WMSX.CPU_PANA_TURBO |= 0;
+        WMSX.Z80B_MODE |= 0;
         WMSX.CPU_FAKE_TR_TURBO |= 0;
         WMSX.R800_TIMING |= 0;
         WMSX.VDP_TYPE |= 0;
