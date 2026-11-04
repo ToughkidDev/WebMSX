@@ -20,12 +20,24 @@ WebMSX 6.0.8 기반 웹 MSX 에뮬레이터입니다. 페이지 장식 없이 �
 
 ## Z80B CPU 스위치
 
-어떤 MSX 기종을 고르든 CPU를 **Z80B(5.37MHz)**로 바꿔 실행할 수 있습니다. MSX는 21.48MHz 마스터 클럭을 나눠 CPU 클럭을 만들기 때문에(÷6 = 3.58MHz, ÷4 = 5.37MHz), Z80B로 바꾼 MSX 터보 개조는 칩의 최대 정격인 6MHz가 아니라 5.37MHz로 동작합니다.
+Z80B 스위치를 켜면 항상 **Panasonic FS-A1WX**(Z80B 5.37MHz)로 부팅합니다.
 
-- 하단 바의 톱니바퀴 → **Quick Options**의 **Z80B CPU** 항목에서 켜고 끕니다. 켜면 Z80 클럭이 3.58MHz 대신 5.37MHz가 됩니다.
-- 설정은 브라우저에 저장되어 다음에 열 때도 유지되고, Machine Select로 기종을 바꿔도 그대로 적용됩니다.
-- Z80 CPU Clock을 2x(7.16MHz) 이상으로 직접 올리면 그 값이 우선합니다. 파나소닉 터보도 같은 5.37MHz이므로 둘 중 하나만 켜져 있어도 5.37MHz로 동작합니다.
-- turbo R에서는 Z80 모드일 때만 적용되고, R800 클럭에는 영향이 없습니다.
+- 하단 바의 톱니바퀴 → **Quick Options**의 **Z80B CPU** 항목에서 켜고 끕니다. 켜면 FS-A1WX로 바뀌어 다시 부팅하고, 끄면 켜기 전의 기종으로 돌아가 다시 부팅합니다.
+- 설정은 브라우저에 저장되어, 켜 두면 다음에 열 때도 FS-A1WX로 부팅합니다.
+- Machine Select에서 **Panasonic FS-A1WX (Z80B)**를 고르면 스위치가 켜지고, 다른 기종을 고르면 꺼집니다.
+- MSX는 21.48MHz 마스터 클럭을 나눠 CPU 클럭을 만들기 때문에(÷6 = 3.58MHz, ÷4 = 5.37MHz), Z80B는 칩의 최대 정격인 6MHz가 아니라 5.37MHz로 동작합니다.
+- Z80 CPU Clock을 2x(7.16MHz) 이상으로 직접 올리면 그 값이 우선합니다.
+
+FS-A1WX 구성:
+
+| 항목 | 내용 |
+|---|---|
+| BIOS, 서브 ROM, 한자 폰트 | FS-A1WX의 실제 ROM (WebMSX 내장 MSX2+ 일본판 ROM과 SHA1이 같음) |
+| CPU | Z80B 5.37MHz |
+| RAM | 64KB 메모리 매퍼 |
+| 디스크 드라이브 | 1대 |
+| 한자 BASIC, MSX-MUSIC | WebMSX 내장 ROM (FS-A1WX 전용 ROM 아님) |
+| A1 Cockpit 내장 소프트웨어 | 없음 (ROM 파일 없음) |
 
 ## ▶ 실행하기
 
@@ -54,7 +66,8 @@ URL 뒤에 파라미터를 붙여 기종이나 미디어를 지정할 수 있습
 | `?HARDDISK=<URL>` | SD 카드 1에 디스크 이미지 로드 |
 | `?MEGAFLASHSD_SD1_URL=<URL>` | SD 카드 1 이미지 지정 (`.gz` 가능) |
 | `?MEGAFLASHSD_SD2_URL=<URL>` | SD 카드 2 이미지 지정 (`.gz` 가능) |
-| `?Z80B_MODE=1` | Z80B CPU(5.37MHz)로 실행 (`0`이면 끔. 저장된 설정보다 우선) |
+| `?Z80B_MODE=1` | Z80B 스위치를 켜고 FS-A1WX로 실행 (`0`이면 끔. 저장된 설정보다 우선) |
+| `?MACHINE=FSA1WX` | FS-A1WX로 실행 |
 | `?EXTENSIONS.MAKOTO=0` | Makoto 빼고 실행 |
 | `?EXTENSIONS.MEGAFLASHSD=0` | MegaFlashROM SCC+ SD 빼고 실행 |
 

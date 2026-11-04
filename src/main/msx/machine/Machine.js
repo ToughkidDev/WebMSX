@@ -15,7 +15,6 @@ wmsx.Machine = function() {
         videoSocket.connectInternalVideoSignal(vdp.getVideoSignal());
         self.updateMachineType();
         self.setZ80ClockMode(z80ClockMode);
-        self.setZ80BMode(z80BMode);
         self.setR800ClockMode(r800ClockMode);
         self.setVDPClockMode(vdpClockMode);
         self.setDefaults();
@@ -276,23 +275,23 @@ wmsx.Machine = function() {
         return z80ClockMode;
     };
 
+    // Z80B CPU switch: ON changes to the Z80B Machine (FS-A1WX), OFF returns to the previous Machine
     this.toggleZ80BMode = function() {
-        this.setZ80BMode(!z80BMode);
-        this.showOSD("Z80B CPU: " + (z80BMode ? "ON" : "OFF") + " (Z80 Clock " + cpu.getClockFreqDesc(cpu.getZ80ClockMulti()) + ")", true);
+        var z80BMachine = wmsx.Machine.Z80B_MACHINE;
+        if (!WMSX.MACHINES_CONFIG[z80BMachine]) return self.showOSD("Z80B CPU is not available", true, true);
 
-        // Persist
-        WMSX.userPreferences.current.z80B = z80BMode;
-        WMSX.userPreferences.setDirty();
-        WMSX.userPreferences.save();
-    };
-
-    this.setZ80BMode = function(mode) {
-        z80BMode = !!mode;
-        biosSocket.turboDriverTurboModesUpdate();
+        if (!this.getZ80BMode()) {
+            machineBeforeZ80B = self.machineName;
+            machineTypeSocket.changeMachine(z80BMachine);
+        } else {
+            var back = machineBeforeZ80B || wmsx.Configurator.machineWithoutZ80B;
+            if (!WMSX.MACHINES_CONFIG[back] || back === z80BMachine) back = "MSX2PJ";
+            machineTypeSocket.changeMachine(back);
+        }
     };
 
     this.getZ80BMode = function() {
-        return z80BMode;
+        return self.machineName === wmsx.Machine.Z80B_MACHINE;
     };
 
     this.showZ80ClockModeMessage = function() {
@@ -302,7 +301,7 @@ wmsx.Machine = function() {
     this.getZ80ClockModeDesc = function() {
         var desc = z80ClockMode === 0 ? "Auto " : z80ClockMode === 1 ? "Normal " : "";
         var multi = cpu.getZ80ClockMulti();
-        desc += (z80ClockMode !== 0 && z80ClockMode !== 1 ? "" + multi + "x " : "") + (z80BMode ? "Z80B " : "") + "(" + cpu.getClockFreqDesc(multi) + ")";
+        desc += (z80ClockMode !== 0 && z80ClockMode !== 1 ? "" + multi + "x " : "") + (self.getZ80BMode() ? "Z80B " : "") + "(" + cpu.getClockFreqDesc(multi) + ")";
         return desc;
     };
 
@@ -477,7 +476,6 @@ wmsx.Machine = function() {
             va: videoStandardIsAuto,
             vs: videoStandard.name,
             ctm: z80ClockMode,
-            z8b: z80BMode,
             rtm: r800ClockMode,
             vtm: vdpClockMode,
             s: speedControl,
@@ -537,7 +535,6 @@ wmsx.Machine = function() {
         audioSocket.flushAllSignals();
         diskDriveSocket.fireInterfacesChangeUpdate();
         z80ClockMode = s.ctm !== undefined ? s.ctm : cpu.getZ80ClockMulti() > 1 ? cpu.getZ80ClockMulti() : 0;
-        z80BMode = !!s.z8b;
         r800ClockMode = s.rtm !== undefined ? s.rtm : cpu.getR800ClockMulti() > 1 ? cpu.getR800ClockMulti() : 0;
         vdpClockMode = s.vtm !== undefined ? s.vtm : vdp.getVDPTurboMulti() > 1 ? vdp.getVDPTurboMulti() : 0;
         biosSocket.turboDriverTurboModesUpdate();
@@ -664,7 +661,7 @@ wmsx.Machine = function() {
     var fastBootCountdown = 0;
 
     var z80ClockMode =  WMSX.Z80_CLOCK_MODE < 0 ? 0 :  WMSX.Z80_CLOCK_MODE;
-    var z80BMode =      WMSX.Z80B_MODE >= 0 ? WMSX.Z80B_MODE === 1 : !!WMSX.userPreferences.current.z80B;      // Z80B CPU at 5.37 MHz
+    var machineBeforeZ80B = null;
     var r800ClockMode = WMSX.R800_CLOCK_MODE < 0 ? 0 : WMSX.R800_CLOCK_MODE;
     var vdpClockMode =  WMSX.VDP_CLOCK_MODE < 0 ? 0 :  WMSX.VDP_CLOCK_MODE;
 
@@ -1193,10 +1190,11 @@ wmsx.Machine = function() {
                 case controls.Z80_CLOCK_MODE:
                     var multi = cpu.getZ80ClockMulti();
                     var multiDesc = +multi.toFixed(2);
-                    var desc = z80ClockMode === 0 ? "Auto" + (multi !== 1 ? " " + multiDesc + "x" : "") : z80ClockMode === 1 && !z80BMode ? "Normal" : "" + multiDesc + "x" ;
+                    var desc = z80ClockMode === 0 ? "Auto" + (multi !== 1 ? " " + multiDesc + "x" : "") : z80ClockMode === 1 && !self.getZ80BMode() ? "Normal" : "" + multiDesc + "x" ;
                     return { label: desc, active: multi !== 1 };
                 case controls.Z80B_MODE:
-                    return { label: z80BMode ? "5.37 MHz" : "OFF", active: z80BMode };
+                    var z80B = self.getZ80BMode();
+                    return { label: z80B ? "5.37 MHz" : "OFF", active: z80B };
                 case controls.R800_CLOCK_MODE:
                     multi = cpu.getR800ClockMulti();
                     desc = r800ClockMode === 0 ? "Auto" + (multi !== 1 ? " " + multi + "x" : "") : r800ClockMode === 1 ? "Normal" : "" + multi + "x" ;
@@ -1332,3 +1330,5 @@ wmsx.Machine = function() {
 wmsx.Machine.BASE_CPU_CLOCK = 228 * 262 * 60;        // 3584160Hz, rectified to 60Hz (228 clocks per line, 262 lines, 60 fps)
 
 wmsx.Machine.MACHINE_TYPE = { MSX1: 1, MSX2: 2, MSX2P: 3, MSXTR: 4 };
+
+wmsx.Machine.Z80B_MACHINE = "FSA1WX";          // Panasonic FS-A1WX, booted when the Z80B CPU switch is on

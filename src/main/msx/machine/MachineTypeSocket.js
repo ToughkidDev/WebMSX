@@ -32,6 +32,14 @@ wmsx.MachineTypeSocket = function(machine) {
         var machineConfig = WMSX.MACHINES_CONFIG[name];
         if (!machineConfig) return;
 
+        // The Z80B CPU switch follows the Z80B Machine
+        var z80B = name === wmsx.Machine.Z80B_MACHINE;
+        if (!!WMSX.userPreferences.current.z80B !== z80B) {
+            WMSX.userPreferences.current.z80B = z80B;
+            WMSX.userPreferences.setDirty();
+            WMSX.userPreferences.save();
+        }
+
         var wasOn = machine.powerIsOn;
         machine.powerOff();
         var wasPaused = machine.systemPause(true);

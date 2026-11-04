@@ -40,6 +40,10 @@ wmsx.Configurator = {
         if (!WMSX.MACHINES_CONFIG[WMSX.MACHINE] || WMSX.MACHINES_CONFIG[WMSX.MACHINE].AUTO_TYPE) WMSX.MACHINE = this.detectDefaultMachine();
         delete WMSX.params.MACHINE;
 
+        // Z80B CPU switch on: always boot the Z80B Machine
+        this.machineWithoutZ80B = WMSX.MACHINE;
+        if (this.isZ80BModeOnAtBoot() && WMSX.MACHINES_CONFIG[wmsx.Machine.Z80B_MACHINE]) WMSX.MACHINE = wmsx.Machine.Z80B_MACHINE;
+
         // Apply all parameters from Machine, Presets and Single Parameters from URL
         this.applyFinalConfig();
 
@@ -349,6 +353,18 @@ wmsx.Configurator = {
 
     extensionsInitialURLSpecs: function() {
         return WMSX.room.machine.getExtensionsSocket().getInitialLoaderURLSpecs();
+    },
+
+    isZ80BModeOnAtBoot: function() {
+        var mode = (WMSX.params.Z80B_MODE !== undefined ? WMSX.params.Z80B_MODE : WMSX.Z80B_MODE) | 0;
+        if (mode >= 0) return mode === 1;
+        // User preference. Read directly since preferences are loaded only after the configuration
+        try {
+            var env = WMSX.params.ENVIRONMENT !== undefined ? WMSX.params.ENVIRONMENT : WMSX.ENVIRONMENT;
+            return !!JSON.parse(localStorage["wmsxprefs" + (env ? "_" + env : "")] || "{}").z80B;
+        } catch (e) {
+            return false;
+        }
     },
 
     detectDefaultMachine: function() {

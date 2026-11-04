@@ -95,7 +95,7 @@ WMSX = {
     R800_CLOCK_MODE:                0,                          // 0: auto; (0..2]: R800 CPU clock multiplier;
     R800_TIMING:                    1,                          // 0: off, 1: on; 2: VDP waits only. Precise R800/S1990 timings. Turn off for faster and lighter emulation
     Z80_CLOCK_MODE:                 0,                          // 0: auto (soft-turbo possible); (0..8]: Z80 CPU clock multiplier;
-    Z80B_MODE:                      -1,                         // -1: user preference (default off); 0: off; 1: on. Z80B CPU at 5.37 MHz (master clock / 4) instead of 3.58 MHz, on any machine
+    Z80B_MODE:                      -1,                         // -1: user preference (default off); 0: off; 1: on. Z80B CPU at 5.37 MHz (master clock / 4). Always boots the Panasonic FS-A1WX
     VDP_CLOCK_MODE:                 0,                          // 0: auto (soft-turbo possible); (0..8]: VDP Command Engine clock multiplier; 9: instantaneous
     Z80_SOFT_TURBO_MULTI:           1.5,                        // 1..8 Z80 CPU clock multiplier when in AUTO mode and activated by software or CPU_SOFT_TURBO_AUTO_ON
     VDP_SOFT_TURBO_MULTI:           1,                          // 1..9 VDP Command Engine clock multiplier when in AUTO mode and activated by software or CPU_SOFT_TURBO_AUTO_ON
@@ -142,6 +142,7 @@ WMSX.MACHINES_CONFIG = {
     MSX2PA:  { DESC:  "MSX2+ America (NTSC)",       TYPE: 3, PRESETS: "_MSX2PA" },
     MSX2PE:  { DESC:  "MSX2+ Europe (PAL)",         TYPE: 3, PRESETS: "_MSX2PE" },
     MSX2PJ:  { DESC:  "MSX2+ Japan (NTSC)",         TYPE: 3, PRESETS: "_MSX2PJ",  LANG: "ja" },
+    FSA1WX:  { DESC:  "Panasonic FS-A1WX (Z80B)",   TYPE: 3, PRESETS: "_FSA1WX",  LANG: "ja" },
     MSX2A:   { DESC:  "MSX2 America (NTSC)",        TYPE: 2, PRESETS: "_MSX2A" },
     MSX2E:   { DESC:  "MSX2 Europe (PAL)",          TYPE: 2, PRESETS: "_MSX2E" },
     MSX2J:   { DESC:  "MSX2 Japan (NTSC)",          TYPE: 2, PRESETS: "_MSX2J",   LANG: "ja" },
@@ -323,6 +324,10 @@ WMSX.PRESETS_CONFIG = {
         SLOT0P_URL:         "@MSX2P_JAP.bios",
         SLOT31_URL:         "@MSX2PEXT_JAP.bios | @KanjiBasic2PLogo_NTSC.bios",
         BOOT_DURATION_AUTO: 380
+    },
+    _FSA1WX: {
+        _INCLUDE:           "_MSX2PJ, DISKA",          // FS-A1WX BIOS, Sub ROM and Kanji Font are the same as MSX2+ Japan
+        RAMMAPPER_SIZE:     64
     },
     _MSX2PBASE: {
         _INCLUDE:           "_MSX2BASE, KANJIDRVP"

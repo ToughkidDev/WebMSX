@@ -131,7 +131,7 @@ WMSX.userPreferences.defaults = function() {
         },
 
         vSynch: 1,                          // auto
-        z80B: false,                        // Z80B CPU (5.37 MHz) off
+        z80B: false,                        // Z80B CPU (5.37 MHz, Panasonic FS-A1WX) off
         crtFilter: -1,                      // auto
         crtScanlines: 0,                    // off
 
