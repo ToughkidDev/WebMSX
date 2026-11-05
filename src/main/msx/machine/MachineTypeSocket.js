@@ -57,7 +57,7 @@ wmsx.MachineTypeSocket = function(machine) {
         machine.updateMachineType();
 
         new wmsx.MultiDownloader(
-            wmsx.Configurator.slotURLSpecs(),
+            wmsx.Configurator.slotURLSpecs().concat(wmsx.Configurator.ocmSDCardURLSpecs()),
             function onAllSuccess() {
                 machine.getExtensionsSocket().propagateAllExtensions();
                 machine.getExtensionsSocket().refreshSlotsFromConfig(function() {

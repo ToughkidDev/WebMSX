@@ -28,6 +28,10 @@
             WMSX.MEGAFLASHSD_SD1_URL = "sdcards/sd1.img";     // Nextor FAT16 64MB
             WMSX.MEGAFLASHSD_SD2_URL = "sdcards/sd2.img";     // Nextor FAT16 64MB
             WMSX.PRESETS_CONFIG._BASE._INCLUDE += ", MEGAFLASHSD, MAKOTO";
+            // MSX++ OCM-PLD (1chipMSX) machine: real OCM-SDBIOS (OCM-SDBIOS Pack v3.8.4, Nextor) and Internal MegaSD card
+            WMSX.OCM_SDBIOS_PATH = "OCM/sdbios/";
+            WMSX.OCM_SD_URL = "sdcards/ocmsd.img";             // Nextor FAT16 64MB with MSX-DOS 2, Nextor and the OCM utilities
+            WMSX.PRESETS_CONFIG._OCM["EXTENSIONS.MEGAFLASHSD"] = 0;     // Boot from the Internal MegaSD. The MegaFlashROM SCC+ SD Nextor kernel does not work together with it
         </script>
 
     </body>

@@ -48,6 +48,7 @@ wmsx.CartridgeMegaFlashROMSCCPlusSD = function(rom) {
         bus = machine.bus;
         cartridgeSocket = machine.getCartridgeSocket();
         diskDriveSocket = machine.getDiskDriveSocket();
+        hardDiskStorage = wmsx.SDCardSPI.hardDiskStorage(diskDriveSocket);
         scc.setAudioSocket(machine.getAudioSocket());
         psg.setAudioSocket(machine.getAudioSocket());
         if (sccConnected) scc.connectAudio();                   // needed in LoadStates
@@ -550,216 +551,15 @@ wmsx.CartridgeMegaFlashROMSCCPlusSD = function(rom) {
     }
 
 
-    // SD Card in SPI mode  -------------------------------------------
-
-    function SDCard(index) {
-        this.index = index;
-        this.cmdBuf = [ 0, 0, 0, 0, 0, 0 ];
-        this.sectorBuf = new Uint8Array(512);
-        this.reset();
-    }
-
-    SDCard.prototype.reset = function() {
-        this.cmdIdx = 0;
-        this.responseQueue = [];
-        this.transferDelayCounter = 0;
-        this.mode = SD_COMMAND;
-        this.currentSector = 0;
-        this.currentByteInSector = 0;
-    };
+    // SD Cards in SPI mode  -------------------------------------------
 
     // SD card 1: Hard Disk drive image if inserted, else the configured SD image. SD card 2: the configured SD image
-    SDCard.prototype.storage = function() {
-        if (this.index === 0 && diskDriveSocket) {
-            var drive = diskDriveSocket.getDrive();
-            if (drive && drive.isDiskInserted(HARD_DISK_DRIVE)) return hardDiskStorage;
-        }
-        return wmsx.SparseDiskImage.sdCards[this.index] || null;
-    };
-
-    SDCard.prototype.nbSectors = function() {
-        var storage = this.storage();
-        return storage ? storage.totalSectors : 0;
-    };
-
-    SDCard.prototype.readCurrentByteFromCurrentSector = function() {
-        var result;
-        if (this.currentByteInSector === -1) {
-            var storage = this.storage();
-            result = storage && storage.readSector(this.currentSector, this.sectorBuf) ? SD_START_BLOCK_TOKEN : SD_DATA_ERROR_TOKEN_ERROR;
-        } else
-            result = this.sectorBuf[this.currentByteInSector];
-        this.currentByteInSector++;
-        if (this.currentByteInSector === 512) this.responseQueue.push(0x00, 0x00);      // 2 CRCs (dummy)
-        return result;
-    };
-
-    SDCard.prototype.writeCurrentSector = function() {
-        var storage = this.storage();
-        return !!storage && storage.writeSector(this.currentSector, this.sectorBuf);
-    };
-
-    SDCard.prototype.transfer = function(value, cs) {
-        if (!this.storage()) return 0xff;           // no card inserted
-        if (cs) return 0xff;                        // /CS is true: not for this chip
-
-        // process output
-        var retval = 0xff;
-        if (this.transferDelayCounter > 0)
-            --this.transferDelayCounter;
-        else {
-            if (this.responseQueue.length === 0) {
-                switch (this.mode) {
-                    case SD_READ:
-                        retval = this.readCurrentByteFromCurrentSector();
-                        if (this.currentByteInSector === 512) this.mode = SD_COMMAND;
-                        break;
-                    case SD_MULTI_READ:
-                        if (this.currentSector >= this.nbSectors())
-                            retval = SD_DATA_ERROR_TOKEN_OUT_OF_RANGE;
-                        else {
-                            retval = this.readCurrentByteFromCurrentSector();
-                            if (this.currentByteInSector === 512) {
-                                this.currentSector++;
-                                this.currentByteInSector = -1;
-                            }
-                        }
-                        break;
-                }
-            } else
-                retval = this.responseQueue.shift();
-        }
-
-        // process input
-        var response;
-        switch (this.mode) {
-            case SD_WRITE:
-                if (this.currentByteInSector === -1) {
-                    if (value === SD_START_BLOCK_TOKEN) this.currentByteInSector++;
-                    break;
-                }
-                if (this.currentByteInSector < 512) this.sectorBuf[this.currentByteInSector] = value;
-                this.currentByteInSector++;
-                if (this.currentByteInSector === 512 + 2) {
-                    response = this.writeCurrentSector() ? SD_DRT_ACCEPTED : SD_DRT_WRITE_ERROR;
-                    this.mode = SD_COMMAND;
-                    this.transferDelayCounter = 1;
-                    this.responseQueue.push(response);
-                }
-                break;
-            case SD_MULTI_WRITE:
-                if (this.currentByteInSector === -1) {
-                    if (value === SD_STOP_TRAN_TOKEN) this.mode = SD_COMMAND;
-                    if (value === SD_START_BLOCK_TOKEN_MBW) this.currentByteInSector++;
-                    break;
-                }
-                if (this.currentByteInSector < 512) this.sectorBuf[this.currentByteInSector] = value;
-                this.currentByteInSector++;
-                if (this.currentByteInSector === 512 + 2) {
-                    response = SD_DRT_ACCEPTED;
-                    if (this.currentSector >= this.nbSectors())
-                        response = SD_DRT_WRITE_ERROR;
-                    else {
-                        if (this.writeCurrentSector()) {
-                            this.currentByteInSector = -1;
-                            this.currentSector++;
-                        } else
-                            response = SD_DRT_WRITE_ERROR;
-                    }
-                    this.transferDelayCounter = 1;
-                    this.responseQueue.push(response);
-                }
-                break;
-            default:
-                if ((this.cmdIdx === 0 && (value >> 6) === 1) || this.cmdIdx > 0) {     // command start or in progress
-                    this.cmdBuf[this.cmdIdx] = value;
-                    ++this.cmdIdx;
-                    if (this.cmdIdx === 6) {
-                        this.executeCommand();
-                        this.cmdIdx = 0;
-                    }
-                }
-                break;
-        }
-
-        return retval;
-    };
-
-    SDCard.prototype.executeCommand = function() {
-        // it takes 2 transfers (2x8 cycles) before a reply can be given to a command
-        this.transferDelayCounter = 2;
-        var q = this.responseQueue;
-        var command = this.cmdBuf[0] & 0x3f;
-        switch (command) {
-            case 0:  // GO_IDLE_STATE
-                q.length = 0;
-                this.mode = SD_COMMAND;
-                q.push(SD_R1_IDLE);
-                break;
-            case 8:  // SEND_IF_COND
-                q.push(SD_R1_IDLE, 0x02, 0x00, 0x01, this.cmdBuf[4]);
-                break;
-            case 9:  // SEND_CSD (CSD version 2.0, SDHC)
-                var cSize = (((this.nbSectors() * 512) / (512 * 1024)) | 0) - 1;
-                if (cSize < 0) cSize = 0;
-                q.push(SD_R1_BUSY, SD_START_BLOCK_TOKEN, 0x40, 0x0e, 0x00, 0x32, 0x00, 0x00, 0x00,
-                    (cSize >> 16) & 0x3f, (cSize >> 8) & 0xff, cSize & 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01);
-                break;
-            case 10: // SEND_CID
-                q.push(SD_R1_BUSY, SD_START_BLOCK_TOKEN, 0xaa, 0x77, 0x6d, 0x6d, 0x75, 0x63, 0x6f, 0x4d,     // "wmmucoM"
-                    0x01, 0x12, 0x34, 0x56, 0x78, 0x00, 0xe6, 0x01);
-                break;
-            case 12: // STOP TRANSMISSION
-                q.push(SD_R1_IDLE);
-                this.mode = SD_COMMAND;
-                break;
-            case 16: // SET_BLOCK_LEN
-                q.push(SD_R1_IDLE);
-                break;
-            case 17: // READ_SINGLE_BLOCK
-            case 18: // READ_MULTIPLE_BLOCK
-            case 24: // WRITE_BLOCK
-            case 25: // WRITE_MULTIPLE_BLOCK
-                // SDHC so the address is the sector
-                this.currentSector = ((this.cmdBuf[1] << 24) | (this.cmdBuf[2] << 16) | (this.cmdBuf[3] << 8) | this.cmdBuf[4]) >>> 0;
-                if (this.currentSector >= this.nbSectors())
-                    q.push(SD_R1_PARAMETER_ERROR);
-                else {
-                    q.push(SD_R1_BUSY);
-                    this.mode = command === 17 ? SD_READ : command === 18 ? SD_MULTI_READ : command === 24 ? SD_WRITE : SD_MULTI_WRITE;
-                    this.currentByteInSector = -1;      // wait for token
-                }
-                break;
-            case 41: // ACMD 41: SD_SEND_OP_COND
-                q.push(SD_R1_BUSY);
-                break;
-            case 55: // APP_CMD
-                q.push(SD_R1_IDLE);
-                break;
-            case 58: // READ_OCR
-                q.push(SD_R1_BUSY, 0x40, 0x00, 0x00, 0x00);
-                break;
-            default:
-                q.push(SD_R1_ILLEGAL_COMMAND);
-                break;
-        }
-    };
-
-    SDCard.prototype.saveState = function() {
-        return {
-            m: this.mode, cb: this.cmdBuf.slice(0), ci: this.cmdIdx,
-            sb: wmsx.Util.storeInt8BitArrayToStringBase64(this.sectorBuf),
-            td: this.transferDelayCounter, rq: this.responseQueue.slice(0),
-            cs: this.currentSector, cbs: this.currentByteInSector
+    function sdCardStorage(index) {
+        return function() {
+            if (index === 0 && hardDiskStorage && hardDiskStorage.isInserted()) return hardDiskStorage;
+            return wmsx.SparseDiskImage.sdCards[index] || null;
         };
-    };
-
-    SDCard.prototype.loadState = function(s) {
-        this.mode = s.m; this.cmdBuf = s.cb.slice(0); this.cmdIdx = s.ci;
-        this.sectorBuf = wmsx.Util.restoreStringBase64ToInt8BitArray(s.sb, this.sectorBuf);
-        this.transferDelayCounter = s.td; this.responseQueue = s.rq.slice(0);
-        this.currentSector = s.cs; this.currentByteInSector = s.cbs;
-    };
+    }
 
 
     var machine, bus, cartridgeSocket, diskDriveSocket;
@@ -787,24 +587,9 @@ wmsx.CartridgeMegaFlashROMSCCPlusSD = function(rom) {
 
     var bankRegsSubSlot3 = [ 0, 1, 0, 0 ];
     var selectedCard = 0;
-    var sdCards = [ new SDCard(0), new SDCard(1) ];
+    var sdCards = [ new wmsx.SDCardSPI(sdCardStorage(0)), new wmsx.SDCardSPI(sdCardStorage(1)) ];
 
-    // Hard Disk drive as SD card storage
-    var hardDiskStorage = {
-        get totalSectors() {
-            return diskDriveSocket.getDrive().getTotalSectorsAvailable(HARD_DISK_DRIVE) || 0;
-        },
-        readSector: function(sector, dest) {
-            var drive = diskDriveSocket.getDrive();
-            drive.motorFlash(HARD_DISK_DRIVE);
-            return drive.readSectorToArray(HARD_DISK_DRIVE, sector, dest);
-        },
-        writeSector: function(sector, src) {
-            var drive = diskDriveSocket.getDrive();
-            drive.motorFlash(HARD_DISK_DRIVE);
-            return drive.writeSectorFromArray(HARD_DISK_DRIVE, sector, src);
-        }
-    };
+    var hardDiskStorage = null;           // Hard Disk drive as SD card 1 storage
 
     var flashState = 0, flashCmd = [], flashVppWpPinLow = true;
     var flashContentName, flashModif = false;
@@ -838,14 +623,6 @@ wmsx.CartridgeMegaFlashROMSCCPlusSD = function(rom) {
         0x40: 0x50, 0x41: 0x52, 0x42: 0x49, 0x43: 0x31, 0x44: 0x33, 0x45: 0x00, 0x46: 0x02, 0x47: 0x04, 0x48: 0x01,
         0x49: 0x04, 0x4a: 0x00, 0x4b: 0x00, 0x4c: 0x01, 0x4d: 0xb5, 0x4e: 0xc5, 0x4f: 0x02, 0x50: 0x01
     };
-
-    var HARD_DISK_DRIVE = 2;
-
-    var SD_COMMAND = 0, SD_READ = 1, SD_MULTI_READ = 2, SD_WRITE = 3, SD_MULTI_WRITE = 4;
-    var SD_DRT_ACCEPTED = 0x05, SD_DRT_WRITE_ERROR = 0x0d;
-    var SD_START_BLOCK_TOKEN = 0xfe, SD_START_BLOCK_TOKEN_MBW = 0xfc, SD_STOP_TRAN_TOKEN = 0xfd;
-    var SD_DATA_ERROR_TOKEN_ERROR = 0x01, SD_DATA_ERROR_TOKEN_OUT_OF_RANGE = 0x08;
-    var SD_R1_BUSY = 0x00, SD_R1_IDLE = 0x01, SD_R1_ILLEGAL_COMMAND = 0x04, SD_R1_PARAMETER_ERROR = 0x80;
 
 
     // Savestate  -------------------------------------------

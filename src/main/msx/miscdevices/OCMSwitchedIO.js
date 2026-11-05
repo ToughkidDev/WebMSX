@@ -483,17 +483,19 @@ wmsx.OCMSwitchedIO = function(machine) {
     }
 
     // Internal Mapper size and MegaSD follow their acknowledged states. Machine is reset again if they change
+    // Internal MegaSD is the OCM MegaSD Extension with the OCM-SDBIOS, otherwise the Hard Drive Extension (Nextor) at Slot 3-2
     function applyHardwareConfig() {
         var mapperSize = mapperAck ? 4096 : 2048;
-        var megaSD = megaSDAck ? 2 : 0;                     // Hard Drive Extension at Slot 3-2
-        if (WMSX.RAMMAPPER_SIZE === mapperSize && (WMSX.EXTENSIONS.HARDDISK ? 2 : 0) === megaSD) return;
+        var ext = WMSX.EXTENSIONS_CONFIG.OCMMEGASD.URL ? "OCMMEGASD" : "HARDDISK";
+        var megaSD = megaSDAck ? (ext === "HARDDISK" ? 2 : 1) : 0;
+        if (WMSX.RAMMAPPER_SIZE === mapperSize && (WMSX.EXTENSIONS[ext] || 0) === megaSD) return;
 
         var extensionsSocket = machine.getExtensionsSocket();
         if (WMSX.RAMMAPPER_SIZE !== mapperSize) {
             WMSX.RAMMAPPER_SIZE = mapperSize;
             machine.getSlotSocket().insertSlot(null, WMSX.EXTENSIONS_CONFIG.RAMMAPPER.SLOT, true, true);       // Removed, will be recreated with new size
         }
-        WMSX.EXTENSIONS.HARDDISK = megaSD;
+        WMSX.EXTENSIONS[ext] = megaSD;
         var wasPaused = machine.systemPause(true);
         extensionsSocket.refreshSlotsFromConfig(function() {
             if (!wasPaused) machine.systemPause(false);

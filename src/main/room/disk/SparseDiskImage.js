@@ -27,8 +27,8 @@ wmsx.SparseDiskImage = function(name, totalSectors) {
 
 };
 
-// Loaded MegaFlashROM SCC+ SD card images
-wmsx.SparseDiskImage.sdCards = [ null, null ];
+// Loaded SD card images
+wmsx.SparseDiskImage.sdCards = [ null, null, null ];           // MegaFlashROM SCC+ SD card 1 and 2, MSX++ (OCM-PLD) Internal MegaSD
 
 wmsx.SparseDiskImage.isZero = function(bytes, start) {
     for (var i = start, end = start + 512; i < end; ++i) if (bytes[i] !== 0) return false;

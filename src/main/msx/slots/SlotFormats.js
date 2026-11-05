@@ -373,6 +373,23 @@ wmsx.SlotFormats = {
         }
     },
 
+    "OCMMegaSD": {
+        name: "OCMMegaSD",
+        desc: "MSX++ (OCM-PLD) Internal MegaSD",
+        priority: 1514,
+        internal: true,
+        priorityForRom: function (rom) {
+            // OCM-SDBIOS MegaSD disk driver up to 1MB. Must be selected via info format hint
+            return (rom.content.length <= 0x100000) ? this.priority : null;
+        },
+        createFromROM: function (rom) {
+            return new wmsx.CartridgeOCMMegaSD(rom);
+        },
+        recreateFromSaveState: function (state, previousSlot) {
+            return wmsx.CartridgeOCMMegaSD.recreateFromSaveState(state, previousSlot);
+        }
+    },
+
     "MegaRAM": {
         name: "MegaRAM",
         desc: "MegaRAM Mapper Cartridge",

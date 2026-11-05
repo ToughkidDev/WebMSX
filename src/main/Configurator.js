@@ -62,10 +62,44 @@ wmsx.Configurator = {
         this.applyPresets(WMSX.MACHINES_CONFIG[WMSX.MACHINE].PRESETS);
         // Apply additional Presets over Machine configuration
         this.applyPresets(WMSX.PRESETS);
+        // MSX++ (OCM-PLD) with the real OCM-SDBIOS
+        this.applyOCMSDBIOS();
         // Apply additional Single Parameters overrides (including URL parameters)
         for (var par in WMSX.params) this.applyParam(par, WMSX.params[par]);
         // Ensure the correct types of the parameters after all settings applied
         this.normalizeParameterTypes();
+    },
+
+    // MSX++ (OCM-PLD) machine using the ROMs split from an OCM-BIOS.DAT (OCM-SDBIOS) instead of the built-in MSX2+ BIOS and Nextor
+    // Same Slots as the OCM-PLD IPL-ROM loading. JIS1/JIS2 Kanji fonts are the same as the built-in ones
+    applyOCMSDBIOS: function() {
+        var path = WMSX.params.OCM_SDBIOS_PATH !== undefined ? WMSX.params.OCM_SDBIOS_PATH : WMSX.OCM_SDBIOS_PATH;
+        if (!path || !WMSX.MACHINES_CONFIG[WMSX.MACHINE].OCM) {
+            WMSX.EXTENSIONS.OCMMEGASD = 0;
+            return;
+        }
+        if (path[path.length - 1] !== "/") path += "/";
+        WMSX.SLOT00_URL = path + "MSX2P.ROM";                                            // 0-0  Main BIOS
+        WMSX.SLOT03_URL = path + "OPT.ROM";  WMSX.SLOT03_FORMAT = "PlainROM"; WMSX.SLOT03_START = "0x4000";      // 0-3  Option ROM (MSX++ logo)
+        WMSX.SLOT31_URL = path + "MSX2PEXT.ROM | " + path + "MSXKANJI.ROM";             // 3-1  Sub ROM + Kanji BASIC
+        WMSX.SLOT33_URL = path + "XBASIC.ROM"; WMSX.SLOT33_FORMAT = "PlainROM"; WMSX.SLOT33_START = "0x4000";   // 3-3  MSX-BASIC Compiler
+        WMSX.EXTENSIONS_CONFIG.MSXMUSIC.URL = path + "MSX2PMUS.ROM";                      // 0-2  MSX-MUSIC
+        WMSX.EXTENSIONS_CONFIG.MSXMUSIC.FORMAT = "MSXMUSIC";
+        WMSX.EXTENSIONS_CONFIG.OCMMEGASD.URL = path + "MEGASD.ROM";                       // 3-2  Internal MegaSD
+        WMSX.EXTENSIONS.OCMMEGASD = WMSX.EXTENSIONS.HARDDISK ? 1 : 0;
+        WMSX.EXTENSIONS.HARDDISK = 0;
+    },
+
+    // Card image of the MSX++ (OCM-PLD) Internal MegaSD, if not loaded yet
+    ocmSDCardURLSpecs: function() {
+        if (!WMSX.OCM_SD_URL || !WMSX.MACHINES_CONFIG[WMSX.MACHINE].OCM || wmsx.SparseDiskImage.sdCards[2]) return [];
+        return [{
+            url: WMSX.OCM_SD_URL,
+            asyncLoader: wmsx.SparseDiskImage.loadFromURL,
+            onSuccess: function (res) {
+                wmsx.SparseDiskImage.sdCards[2] = res.content;
+            }
+        }];
     },
 
     applyPresets: function(presetList, silent) {
@@ -348,7 +382,7 @@ wmsx.Configurator = {
                     wmsx.SparseDiskImage.sdCards[1] = res.content;
                 }
             } : null
-        ];
+        ].concat(this.ocmSDCardURLSpecs());
     },
 
     extensionsInitialURLSpecs: function() {

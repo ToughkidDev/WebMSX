@@ -95,6 +95,8 @@ WMSX = {
     R800_CLOCK_MODE:                0,                          // 0: auto; (0..2]: R800 CPU clock multiplier;
     R800_TIMING:                    1,                          // 0: off, 1: on; 2: VDP waits only. Precise R800/S1990 timings. Turn off for faster and lighter emulation
     Z80_CLOCK_MODE:                 0,                          // 0: auto (soft-turbo possible); (0..8]: Z80 CPU clock multiplier;
+    OCM_SDBIOS_PATH:                "",                         // MSX++ (OCM-PLD) ROMs split from OCM-BIOS.DAT (see mucoMSX OCM/makesdbios.py). Empty: built-in MSX2+ BIOS and Nextor
+    OCM_SD_URL:                     "",                         // MSX++ (OCM-PLD) Internal MegaSD card image (may be .gz). Used when no Hard Disk is inserted
     OCM_DIP_SW:                     0x80,                       // MSX++ (OCM-PLD) physical DIP-SW 1-8 at bits 0-7 (1 = ON). Default: only DIP-SW8 (Internal MegaSD) ON
     Z80B_MODE:                      -1,                         // -1: user preference (default off); 0: off; 1: on. Z80B CPU at 5.37 MHz (master clock / 4). Always boots the Panasonic FS-A1WX
     VDP_CLOCK_MODE:                 0,                          // 0: auto (soft-turbo possible); (0..8]: VDP Command Engine clock multiplier; 9: instantaneous
@@ -175,7 +177,8 @@ WMSX.EXTENSIONS_CONFIG = {
     PAC:       { DESC: "PAC SRAM",      URL: "@[PACExpansion].rom",  SLOT: [1],    SLOT2: [2], CHANGE: { SCCI: 0, SCC: 0, MEGARAM: 0, MEGAFLASHSD: 0 } },
     MEGARAM:   { DESC: "MegaRAM",       URL: "@[MegaRAM].rom",       SLOT: [1],    SLOT2: [2], CHANGE: { SCCI: 0, SCC: 0, PAC: 0, MEGAFLASHSD: 0 } },
     MEGAFLASHSD: { DESC: "MegaFlashROM SCC+ SD", URL: "@[MegaFlashROMSCCPlusSD].rom", FORMAT: "MegaFlashROMSCCPlusSD", SLOT: [1], SLOT2: [2], CHANGE: { SCCI: 0, SCC: 0, PAC: 0, MEGARAM: 0, HARDDISK: 0 } },
-    MAKOTO:    { DESC: "Makoto OPNA",   URL: "@[Makoto].rom",        SLOT: [2],    SLOT2: [1] }
+    MAKOTO:    { DESC: "Makoto OPNA",   URL: "@[Makoto].rom",        SLOT: [2],    SLOT2: [1] },
+    OCMMEGASD: { DESC: "OCM MegaSD",    URL: "",                     FORMAT: "OCMMegaSD", SLOT: [3, 2] }           // Only for MSX++ (OCM-PLD) with OCM_SDBIOS_PATH
 };
 
 WMSX.PRESETS_CONFIG = {
@@ -268,7 +271,7 @@ WMSX.PRESETS_CONFIG = {
     MSXMUSEXTTR: { "EXTENSIONS_CONFIG.MSXMUSIC.URL": "@[MSXMUSIC]TR.rom", "EXTENSIONS_CONFIG.MSXMUSIC.SLOT": [0, 2], "EXTENSIONS_CONFIG.MSXMUSICX.SLOT": [3, 3] },
     KANJIDRVN:   { "EXTENSIONS_CONFIG.KANJI.BOUND": [ "KANJIDRV", "MSXJE" ] },
     KANJIDRVP:   { "EXTENSIONS_CONFIG.KANJI.BOUND": [ "MSXJE" ], "EXTENSIONS.KANJIDRV": 0 },
-    MSXMUSEXTOCM:{ "EXTENSIONS_CONFIG.MSXMUSIC.URL": "@[MSXMUSIC].rom",   "EXTENSIONS_CONFIG.MSXMUSIC.SLOT": [0, 2], "EXTENSIONS_CONFIG.MSXMUSICX.SLOT": [3, 3] },
+    MSXMUSEXTOCM:{ "EXTENSIONS_CONFIG.MSXMUSIC.URL": "@[MSXMUSIC].rom",   "EXTENSIONS_CONFIG.MSXMUSIC.SLOT": [0, 2], "EXTENSIONS_CONFIG.MSXMUSICX.SLOT": [0, 1] },
     KANJIDRVOCM: { "EXTENSIONS_CONFIG.KANJI.BOUND": [ ], "EXTENSIONS.KANJIDRV": 0, "EXTENSIONS.MSXJE": 0 },
     RAMN:        { "RAMMAPPER_SIZE": 512 },
     RAMTR:       { "RAMMAPPER_SIZE": 1024 },
