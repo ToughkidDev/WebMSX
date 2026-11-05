@@ -97,7 +97,7 @@ WMSX = {
     Z80_CLOCK_MODE:                 0,                          // 0: auto (soft-turbo possible); (0..8]: Z80 CPU clock multiplier;
     OCM_SDBIOS_PATH:                "",                         // MSX++ (OCM-PLD) ROMs split from OCM-BIOS.DAT (see mucoMSX OCM/makesdbios.py). Empty: built-in MSX2+ BIOS and Nextor
     OCM_SD_URL:                     "",                         // MSX++ (OCM-PLD) Internal MegaSD card image (may be .gz). Used when no Hard Disk is inserted
-    OCM_DIP_SW:                     0x80,                       // MSX++ (OCM-PLD) physical DIP-SW 1-8 at bits 0-7 (1 = ON). Default: only DIP-SW8 (Internal MegaSD) ON
+    OCM_DIP_SW:                     0x80,                       // MSX++ (OCM-PLD) physical DIP-SW 1-8 at bits 0-7 (1 = ON). Set by the OCM machines: 0x80 (Internal MegaSD), 0x00 (MegaFlashROM)
     Z80B_MODE:                      -1,                         // -1: user preference (default off); 0: off; 1: on. Z80B CPU at 5.37 MHz (master clock / 4). Always boots the Panasonic FS-A1WX
     VDP_CLOCK_MODE:                 0,                          // 0: auto (soft-turbo possible); (0..8]: VDP Command Engine clock multiplier; 9: instantaneous
     Z80_SOFT_TURBO_MULTI:           1.5,                        // 1..8 Z80 CPU clock multiplier when in AUTO mode and activated by software or CPU_SOFT_TURBO_AUTO_ON
@@ -146,7 +146,8 @@ WMSX.MACHINES_CONFIG = {
     MSX2PE:  { DESC:  "MSX2+ Europe (PAL)",         TYPE: 3, PRESETS: "_MSX2PE" },
     MSX2PJ:  { DESC:  "MSX2+ Japan (NTSC)",         TYPE: 3, PRESETS: "_MSX2PJ",  LANG: "ja" },
     FSA1WX:  { DESC:  "Panasonic FS-A1WX (Z80B)",   TYPE: 3, PRESETS: "_FSA1WX",  LANG: "ja" },
-    OCM:     { DESC:  "MSX++ OCM-PLD (1chipMSX)",   TYPE: 3, PRESETS: "_OCM",     LANG: "ja", OCM: true },
+    OCM:     { DESC:  "MSX++ OCM (Internal SD)",   TYPE: 3, PRESETS: "_OCM",     LANG: "ja", OCM: true },
+    OCMMFR:  { DESC:  "MSX++ OCM (MegaFlashROM)",  TYPE: 3, PRESETS: "_OCMMFR",  LANG: "ja", OCM: true },
     MSX2A:   { DESC:  "MSX2 America (NTSC)",        TYPE: 2, PRESETS: "_MSX2A" },
     MSX2E:   { DESC:  "MSX2 Europe (PAL)",          TYPE: 2, PRESETS: "_MSX2E" },
     MSX2J:   { DESC:  "MSX2 Japan (NTSC)",          TYPE: 2, PRESETS: "_MSX2J",   LANG: "ja" },
@@ -338,7 +339,14 @@ WMSX.PRESETS_CONFIG = {
         SLOT00_URL:         "@MSX2P_JAP.bios",
         "EXTENSIONS.HARDDISK": 2,                                                // Internal MegaSD at Slot 3-2
         RAMMAPPER_SIZE:     2048,                                               // Internal Mapper 2048 KB (DIP-SW7 OFF)
+        OCM_DIP_SW:         0x80,                                               // Only DIP-SW8 (Internal MegaSD) ON
         BOOT_DURATION_AUTO: 380
+    },
+    _OCMMFR: {
+        _INCLUDE:           "_OCM",                                             // Same machine with the Internal MegaSD OFF and the MegaFlashROM SCC+ SD at Cartridge Slot 1
+        OCM_DIP_SW:         0x00,                                               // All DIP-SW OFF (DIP-SW8 Internal MegaSD OFF)
+        "EXTENSIONS.HARDDISK": 0,
+        "EXTENSIONS.MEGAFLASHSD": 1
     },
     _FSA1WX: {
         _INCLUDE:           "_MSX2PJ, DISKA",          // FS-A1WX BIOS, Sub ROM and Kanji Font are the same as MSX2+ Japan

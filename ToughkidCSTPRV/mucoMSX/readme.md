@@ -42,13 +42,19 @@ FS-A1WX 구성:
 
 ## MSX++ OCM-PLD (1chipMSX) 모드
 
-Machine Select에서 **MSX++ OCM-PLD (1chipMSX)**를 고르거나 URL에 `?MACHINE=OCM`을 붙이면, [OCM-PLD](https://github.com/ToughkidDev/ocm-pld-dev) v3.9.2 펌웨어를 올린 1chipMSX처럼 동작합니다.
+[OCM-PLD](https://github.com/ToughkidDev/ocm-pld-dev) v3.9.2 펌웨어를 올린 1chipMSX처럼 동작하는 기종 두 가지를 Machine Select에서 고를 수 있습니다.
+
+| Machine Select | URL | 부팅 장치 | 슬롯 1 | DIP 스위치 |
+|---|---|---|---|---|
+| **MSX++ OCM (Internal SD)** | `?MACHINE=OCM` | 내장 MegaSD (`sdcards/ocmsd.img`) | 비어 있음 | `0x80` (DIP-SW8 MegaSD ON) |
+| **MSX++ OCM (MegaFlashROM)** | `?MACHINE=OCMMFR` | MegaFlashROM SCC+ SD (`sdcards/sd1.img`) | MegaFlashROM SCC+ SD | `0x00` (내장 MegaSD OFF) |
+
+두 기종은 같은 OCM-BIOS와 스위치드 I/O를 쓰고, 부팅 장치만 다릅니다. Makoto는 두 기종 모두 슬롯 2에 꽂혀 있습니다. MegaFlashROM의 Nextor 커널(2.1.0 alpha 2)과 내장 MegaSD 드라이버를 함께 쓰면 부팅 중에 멈추므로 두 기종으로 나누었습니다.
 
 - **스위치드 I/O 포트 `#40~#4F` (Revision 12)**: 장치 ID `#D4`(MSX++)와 `#08`(파나소닉 터보)를 OCM-PLD의 `swioports.vhd` 그대로 구현했습니다. 모든 레지스터 읽기/쓰기, 스마트 커맨드(`#00~#FF`), 잠금 마스크, 콜드/웜 리셋 규칙이 같습니다. 실제 `SETSMART.COM`으로 확인했습니다.
 - **OCM-SDBIOS로 부팅**: `OCM/sdbios/`의 진짜 OCM-BIOS(OCM-SDBIOS Pack v3.8.4의 `n38msxpp.yen`: MSX++ 로고, Nextor, 일본 키보드)를 OCM-PLD IPL-ROM과 같은 슬롯에 넣어 부팅합니다. MSX++ 로고와 메모리 크기가 표시되고 내장 MegaSD(Nextor 커널 2.1.4)로 DOS가 뜹니다.
 - **슬롯 구성**: 0-0 메인 BIOS, 0-2 MSX-MUSIC, 0-3 옵션 ROM(MSX++ 로고), 1/2 외부 카트리지 또는 내장 ESE-SCC, 3-0 메모리 매퍼 2048KB, 3-1 서브 ROM + 한자 BASIC, 3-2 내장 MegaSD, 3-3 XBASIC, 한자 ROM JIS1+JIS2. 플로피 드라이브는 없습니다.
 - **내장 MegaSD (3-2)**: OCM-PLD의 `megasd.v`를 옮겼습니다. ESE-RAM 1024KB에 OCM-BIOS의 MegaSD 드라이버(블록 01~08)를 싣고, SPI로 SD 카드를 읽고 씁니다. SD 카드는 `sdcards/ocmsd.img`(Nextor FAT16 64MB)입니다. SDCREATE처럼 OCM-BIOS.DAT, MSX-DOS 2, Nextor, `HELP\`, `UTILS\`(SETSMART, OCMINFO, FIRMINFO, CPUSPEED 등 91개)를 담았습니다. 하단 바의 하드디스크 아이콘으로 이미지를 넣으면 그 이미지를 대신 씁니다.
-- **mucoMSX에서 OCM을 고르면** MegaFlashROM SCC+ SD를 빼고 슬롯 1을 비웁니다(Makoto는 그대로). MegaFlashROM의 Nextor 커널(2.1.0 alpha 2)과 내장 MegaSD 드라이버를 함께 쓰면 부팅 중에 멈추기 때문입니다. MegaFlashROM과 함께 쓰려면 `?MACHINE=OCM&OCM_DIP_SW=0`으로 내장 MegaSD(DIP 스위치 8)를 끄고, 설정 메뉴에서 MegaFlashROM을 켜세요.
 - **에뮬레이터에 실제로 적용되는 스마트 커맨드**
 
 | 기능 | 명령 |
@@ -62,7 +68,7 @@ Machine Select에서 **MSX++ OCM-PLD (1chipMSX)**를 고르거나 URL에 `?MACHI
 | 콜드 리셋, 웜 리셋, 전체 기본값 복원 | `#FB`, `#FD`, `#FF` |
 
 - 나머지 명령(비디오 출력 방식, 스캔라인, LED, 키보드 배열, 세로 오프셋 등)은 실제 기기처럼 상태가 저장되고 포트로 읽히지만, 화면이나 키보드에는 반영되지 않습니다.
-- 물리 DIP 스위치는 URL 옵션 `OCM_DIP_SW`(비트 0~7 = DIP-SW1~8, 기본값 `0x80` = 내장 MegaSD만 ON)로 정합니다. F12, PRTSCR 같은 전환 키는 에뮬레이션하지 않습니다.
+- 물리 DIP 스위치는 기종마다 위 표의 값으로 정해지고, URL 옵션 `OCM_DIP_SW`(비트 0~7 = DIP-SW1~8)로 바꿀 수 있습니다. F12, PRTSCR 같은 전환 키는 에뮬레이션하지 않습니다.
 - 다른 OCM-BIOS를 쓰려면 `python3 OCM/makesdbios.py <OCM-BIOS.DAT> OCM/sdbios`로 다시 나눕니다(OCM-PLD v3.4 이후의 MSX-BIOS 구성). `OCM_SDBIOS_PATH`를 비우면(`?OCM_SDBIOS_PATH=`) 예전처럼 WebMSX 내장 MSX2+ BIOS와 Nextor로 부팅합니다.
 - IPL-ROM(SD 카드에서 BIOS를 읽어 오는 과정), EPCS 플래시, 시스템 타이머, turbo R PCM, 엑스트라 매퍼(0-1), Slot-0 프라이머리 모드는 구현하지 않았습니다.
 
@@ -95,7 +101,8 @@ URL 뒤에 파라미터를 붙여 기종이나 미디어를 지정할 수 있습
 | `?MEGAFLASHSD_SD2_URL=<URL>` | SD 카드 2 이미지 지정 (`.gz` 가능) |
 | `?Z80B_MODE=1` | Z80B 스위치를 켜고 FS-A1WX로 실행 (`0`이면 끔. 저장된 설정보다 우선) |
 | `?MACHINE=FSA1WX` | FS-A1WX로 실행 |
-| `?MACHINE=OCM` | MSX++ OCM-PLD (1chipMSX)로 실행 |
+| `?MACHINE=OCM` | MSX++ OCM (Internal SD)로 실행 |
+| `?MACHINE=OCMMFR` | MSX++ OCM (MegaFlashROM)으로 실행 |
 | `?OCM_SD_URL=<URL>` | OCM 내장 MegaSD 카드 이미지 지정 (`.gz` 가능) |
 | `?MACHINE=OCM&OCM_DIP_SW=0x81` | OCM 물리 DIP 스위치 지정 (예: DIP-SW1 커스텀 속도 + DIP-SW8 MegaSD) |
 | `?EXTENSIONS.MAKOTO=0` | Makoto 빼고 실행 |
