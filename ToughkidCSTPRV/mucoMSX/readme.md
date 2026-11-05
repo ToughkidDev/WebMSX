@@ -40,6 +40,28 @@ FS-A1WX 구성:
 | 한자 BASIC, MSX-MUSIC | WebMSX 내장 ROM (FS-A1WX 전용 ROM 아님) |
 | A1 Cockpit 내장 소프트웨어 | 없음 (ROM 파일 없음) |
 
+## MSX++ OCM-PLD (1chipMSX) 모드
+
+Machine Select에서 **MSX++ OCM-PLD (1chipMSX)**를 고르거나 URL에 `?MACHINE=OCM`을 붙이면, [OCM-PLD](https://github.com/ToughkidDev/ocm-pld-dev) v3.9.2 펌웨어를 올린 1chipMSX처럼 동작합니다.
+
+- **스위치드 I/O 포트 `#40~#4F` (Revision 12)**: 장치 ID `#D4`(MSX++)와 `#08`(파나소닉 터보)를 OCM-PLD의 `swioports.vhd` 그대로 구현했습니다. 모든 레지스터 읽기/쓰기, 스마트 커맨드(`#00~#FF`), 잠금 마스크, 콜드/웜 리셋 규칙이 같습니다. 실제 `SETSMART.COM`으로 확인했습니다.
+- **슬롯 구성**: 0-0 MSX2+ BIOS, 0-2 MSX-MUSIC, 1/2 외부 카트리지 또는 내장 ESE-SCC, 3-0 메모리 매퍼 2048KB, 3-1 서브 ROM + 한자 BASIC, 3-2 내장 MegaSD(Nextor), 한자 ROM JIS1+JIS2. 플로피 드라이브는 없습니다.
+- **에뮬레이터에 실제로 적용되는 스마트 커맨드**
+
+| 기능 | 명령 |
+|---|---|
+| CPU 클럭: 3.58MHz, 터보 파나 5.37MHz, 커스텀 4.10~8.06MHz, 터보 파나 리디렉션 | `#01~#0A`, `#3F~#41`, `#D5` |
+| 내장 슬롯: SCC-I(ESE-MegaSCC+ 2048KB), ASCII-8K/16K(ESE-MegaRAM), 리니어 모드, 확장 MegaROM 읽기 | `#0D~#14`, `#83~#86`, `#58~#59` |
+| VDP 고속 모드 | `#1B~#1C` |
+| 내장 믹서: 마스터/PSG/SCC-I/OPLL 음량, 오디오 프리셋 (외부 카트리지 소리는 그대로) | `#24~#26`, `#44~#46`, `#B0~#CF` |
+| NTSC/PAL 강제 | `#D0~#D2` |
+| 매퍼 2048/4096KB, 내장 MegaSD 켜기/끄기 (웜 리셋 때 적용) | `#1D~#1E`, `#FC`, `#FE` |
+| 콜드 리셋, 웜 리셋, 전체 기본값 복원 | `#FB`, `#FD`, `#FF` |
+
+- 나머지 명령(비디오 출력 방식, 스캔라인, LED, 키보드 배열, 세로 오프셋 등)은 실제 기기처럼 상태가 저장되고 포트로 읽히지만, 화면이나 키보드에는 반영되지 않습니다.
+- 물리 DIP 스위치는 URL 옵션 `OCM_DIP_SW`(비트 0~7 = DIP-SW1~8, 기본값 `0x80` = 내장 MegaSD만 ON)로 정합니다. F12, PRTSCR 같은 전환 키는 에뮬레이션하지 않습니다.
+- OCM-BIOS 대신 WebMSX에 내장된 MSX2+ 일본판 BIOS와 Nextor를 씁니다. IPL-ROM, 시스템 로고, 시스템 타이머, turbo R PCM, 엑스트라 매퍼(0-1), Slot-0 프라이머리 모드는 구현하지 않았습니다.
+
 ## ▶ 실행하기
 
 - **[바로 실행 (GitHub Pages)](https://toughkiddev.github.io/WebMSX/ToughkidCSTPRV/mucoMSX/)**
@@ -69,6 +91,8 @@ URL 뒤에 파라미터를 붙여 기종이나 미디어를 지정할 수 있습
 | `?MEGAFLASHSD_SD2_URL=<URL>` | SD 카드 2 이미지 지정 (`.gz` 가능) |
 | `?Z80B_MODE=1` | Z80B 스위치를 켜고 FS-A1WX로 실행 (`0`이면 끔. 저장된 설정보다 우선) |
 | `?MACHINE=FSA1WX` | FS-A1WX로 실행 |
+| `?MACHINE=OCM` | MSX++ OCM-PLD (1chipMSX)로 실행 |
+| `?MACHINE=OCM&OCM_DIP_SW=0x81` | OCM 물리 DIP 스위치 지정 (예: DIP-SW1 커스텀 속도 + DIP-SW8 MegaSD) |
 | `?EXTENSIONS.MAKOTO=0` | Makoto 빼고 실행 |
 | `?EXTENSIONS.MEGAFLASHSD=0` | MegaFlashROM SCC+ SD 빼고 실행 |
 
@@ -87,6 +111,8 @@ URL 뒤에 파라미터를 붙여 기종이나 미디어를 지정할 수 있습
 - WebMSX: Copyright 2015 by Paulo Augusto Peccin. 모든 권리는 원작자에게 있습니다.
 - `wmsx.js`는 WebMSX 소스에 확장 카트리지 지원을 추가해 다시 빌드한 것이며, 파일 머리말의 저작권 문구를 유지합니다.
 - Makoto(YM2608)와 MegaFlashROM SCC+ SD 구현은 [openMSX](https://github.com/openMSX/openMSX)(GPL-2.0)의 코드를 이식한 것입니다. YM2608의 FM/ADPCM 엔진은 Aaron Giles의 [ymfm](https://github.com/aaronsgiles/ymfm)(BSD-3-Clause)에서 시작되었고, 리듬 샘플 데이터는 Jarek Burczynski, Tatsuyuki Satoh의 MAME fmopn 코어(GPL-2.0 이상)에서 재구성된 것입니다.
+- MSX++ OCM-PLD 모드의 스위치드 I/O 포트와 ESE-SCC는 OCM-PLD의 `swioports.vhd`(Copyright (c) 2011-2025 KdL)와 `megaram.vhd`(Copyright (c) 2006 Kazuhiro Tsujikawa (ESE Artists' factory), modified by t.hara / KdL)를 JavaScript로 옮긴 것입니다. 원본 라이선스에 따라 다음 문구를 함께 배포합니다.
+  > Redistribution and use of this source code or any derivative works, are permitted provided that the following conditions are met: 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer. 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution. 3. Redistributions may not be sold, nor may they be used in a commercial product or activity without specific prior written permission. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 - MegaFlashROM SCC+ SD 펌웨어(`mfrsd.rom.gz`)의 저작권은 Manuel Pazos 및 Nextor 저작자(Konamiman)에게 있습니다.
 - 함께 포함된 MSX 시스템 ROM의 저작권은 각 권리자에게 있습니다.
 - mucoMSX는 WebMSX 원작자 및 MSX Licensing Corporation과 관련이 없는 비공식 프로젝트입니다.

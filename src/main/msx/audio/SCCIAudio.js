@@ -2,7 +2,7 @@
 
 // Implements the SCC and SCC-I Audio chip. Mode can be switched between SCC and SCC-I
 
-wmsx.SCCIAudio = function() {
+wmsx.SCCIAudio = function(pName) {
 "use strict";
 
     function init(self) {
@@ -16,7 +16,7 @@ wmsx.SCCIAudio = function() {
     };
 
     this.connectAudio = function() {
-        if (!audioSignal) audioSignal = new wmsx.AudioSignal("SCC", this, BASE_VOLUME, SAMPLE_RATE, VOLPAN);
+        if (!audioSignal) audioSignal = new wmsx.AudioSignal(pName || "SCC", this, BASE_VOLUME, SAMPLE_RATE, VOLPAN);
         if (audioSocket) audioSocket.connectAudioSignal(audioSignal);
     };
 

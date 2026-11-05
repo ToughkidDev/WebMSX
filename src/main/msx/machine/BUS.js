@@ -45,8 +45,8 @@ wmsx.BUS = function(machine, cpu) {
 
         switch (slotNumber) {
             case 0: slot0 = slot; return;
-            case 1: slot1 = slot; return;
-            case 2: slot2 = slot; return;
+            case 1: slot1 = slotOverrides[1] || slot; return;
+            case 2: slot2 = slotOverrides[2] || slot; return;
             case 3: slot3 = slot; return;
             case 4: slotModules = slot; return;     // extra slow
         }
@@ -54,6 +54,18 @@ wmsx.BUS = function(machine, cpu) {
 
     this.getSlot = function(slotNumber) {
         return slots[slotNumber];
+    };
+
+    // Internal device seen by the CPU instead of the Cartridge inserted at Primary Slot 1 or 2. The Cartridge stays inserted but invisible
+    // Used by the MSX++ (OCM-PLD) Internal SCC-I/ASCII Slots. Device lifecycle and savestate are handled by its owner
+    this.setSlotOverride = function(slotNumber, slot) {
+        slot = slot || null;
+        if (slotOverrides[slotNumber] === slot) return;
+        if (slotOverrides[slotNumber]) slotOverrides[slotNumber].disconnect(machine);
+        slotOverrides[slotNumber] = slot;
+        if (slot) slot.connect(machine);
+        if (slotNumber === 1) slot1 = slot || slots[1];
+        else if (slotNumber === 2) slot2 = slot || slots[2];
     };
 
     function getSlotForAddress(address) {
@@ -239,6 +251,7 @@ wmsx.BUS = function(machine, cpu) {
     var slots;
     var slot0, slot1, slot2, slot3;
     var slotModules;                        // Special Expanded Slot for Modules (Device-only Slots). Memory is inaccessible!
+    var slotOverrides = [ null, null, null ];
     var primarySlotConfig = 0;
     var slot3SecondaryConfig = 0;
 
@@ -265,8 +278,8 @@ wmsx.BUS = function(machine, cpu) {
         return {
             p: primarySlotConfig,
             s0: slot0.saveState(),
-            s1: slot1.saveState(),
-            s2: slot2.saveState(),
+            s1: slots[1].saveState(),
+            s2: slots[2].saveState(),
             s3: slot3.saveState(),
             sM: slotModules.saveState(),
             d: dramMode,

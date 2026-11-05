@@ -28,6 +28,7 @@ wmsx.Machine = function() {
         rtc.setMachineType(this.machineType);
         syf.setMachineType(this.machineType);
         trd.setMachineType(this.machineType);
+        ocm.setActive(!!WMSX.MACHINES_CONFIG[this.machineName].OCM);
         biosSocket.turboDriverTurboModesUpdate();
         bus.refreshConnect();
         machineTypeSocket.fireMachineTypeStateUpdate();
@@ -40,6 +41,7 @@ wmsx.Machine = function() {
     this.powerOn = function(fromState) {
         if (this.powerIsOn) this.powerOff();
         bus.powerOn();
+        ocm.powerOn();
         trd.powerOn();
         syf.powerOn();
         rtc.powerOn();
@@ -60,6 +62,7 @@ wmsx.Machine = function() {
         rtc.powerOff();
         syf.powerOff();
         trd.powerOff();
+        ocm.powerOff();
         bus.powerOff();
         controllersSocket.resetControllers();
         this.powerIsOn = false;
@@ -80,6 +83,7 @@ wmsx.Machine = function() {
         vdp.reset();
         cpu.reset();
         bus.reset();
+        ocm.reset(fromState);
         audioSocket.flushAllSignals();
         if (fastBootFrames > 0) {
             if (!fromState) {
@@ -126,10 +130,25 @@ wmsx.Machine = function() {
 
         if (userPaused && userPauseMoreFrames-- <= 0) return;
 
+        if (ocm.isActive()) ocm.videoClockPulse();
+
         vdp.videoClockPulse();
 
         // Finish audio signal (generate any missing samples to adjust to sample rate)
         audioSocket.audioFinishFrame();
+    };
+
+    this.getOCM = function() {
+        return ocm;
+    };
+
+    this.turboModesUpdate = function() {
+        biosSocket.turboDriverTurboModesUpdate();
+    };
+
+    this.setVideoStandardMode = function(forcedVideoStandard) {      // null = Auto
+        if (forcedVideoStandard) setVideoStandardForced(forcedVideoStandard);
+        else setVideoStandardAuto(false);
     };
 
     this.getMachineTypeSocket = function() {
@@ -473,6 +492,7 @@ wmsx.Machine = function() {
             ps: psg.saveState(),
             vd: vdp.saveState(extended),
             c:  cpu.saveState(),
+            oc: ocm.saveState(),
             va: videoStandardIsAuto,
             vs: videoStandard.name,
             ctm: z80ClockMode,
@@ -510,6 +530,7 @@ wmsx.Machine = function() {
         // Normal
         self.machineName = s.mn;
         self.machineType = s.mt;
+        ocm.setActive(!!(WMSX.MACHINES_CONFIG[s.mn] && WMSX.MACHINES_CONFIG[s.mn].OCM));
         videoStandardIsAuto = s.va;
         setVideoStandard(wmsx.VideoStandard[s.vs]);
         videoStandardSoft = s.vss && wmsx.VideoStandard[s.vss];
@@ -525,6 +546,7 @@ wmsx.Machine = function() {
         syf.loadState(s.sf);
         trd.loadState(s.td);
         bus.loadState(s.b);
+        ocm.loadState(s.oc);
         videoSocket.loadState(s.vm);
         diskDriveSocket.loadState(s.dd);
         cassetteSocket.loadState(s.ct);
@@ -560,6 +582,7 @@ wmsx.Machine = function() {
         self.psg = psg = new wmsx.PSG(controllersSocket, ledsSocket, false);
         self.ppi = ppi = new wmsx.PPI(psg.getAudioChannel(), controllersSocket, ledsSocket);
         self.bus = bus = new wmsx.BUS(self, cpu);
+        self.ocm = ocm = new wmsx.OCMSwitchedIO(self);
         cpu.connectBus(bus);
         ppi.connectBus(bus);
         vdp.connectBus(bus);
@@ -628,6 +651,7 @@ wmsx.Machine = function() {
     var rtc;
     var syf;
     var trd;
+    var ocm;
 
     var userPaused = false;
     var userPauseMoreFrames = 0;
@@ -993,6 +1017,7 @@ wmsx.Machine = function() {
             wmsx.Util.arrayAdd(signals, signal);
             this.flushAllSignals();                            // To always keep signals in synch
             signal.setFps(fps);
+            signal.setVolumeFactor(volumeFactorProvider ? volumeFactorProvider(signal.name) : 1);
             if (monitor) monitor.connectAudioSignal(signal);
         };
         this.disconnectAudioSignal = function(signal) {
@@ -1027,6 +1052,14 @@ wmsx.Machine = function() {
         this.getBUSCycles = function() {
             return cpu.getBUSCycles();
         };
+        this.setVolumeFactorProvider = function(provider) {      // function(signalName) returning the relative volume
+            volumeFactorProvider = provider;
+            this.refreshVolumeFactors();
+        };
+        this.refreshVolumeFactors = function() {
+            for (var i = signals.length - 1; i >= 0; --i) signals[i].setVolumeFactor(volumeFactorProvider ? volumeFactorProvider(signals[i].name) : 1);
+        };
+        var volumeFactorProvider;
         var signals = [];
         var monitor;
         var fps;

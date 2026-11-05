@@ -6,7 +6,7 @@ wmsx.AudioSignal = function (name, source, volume, sampleRate, stereo, clock) {
     var self = this;
 
     function init() {
-        volume = volume * 1.2 * WMSX.VOL;
+        volume = baseVolume = volume * 1.2 * WMSX.VOL;
         generateNextSample = stereo ? generateNextSampleStereo : generateNextSampleMono;
         generateNextSampleMute = stereo ? generateNextSampleStereoMute : generateNextSampleMonoMute;
         var multi = Math.floor(wmsx.Machine.BASE_CPU_CLOCK / sampleRate);
@@ -200,6 +200,13 @@ wmsx.AudioSignal = function (name, source, volume, sampleRate, stereo, clock) {
 
 
     this.name = name;
+
+    // Relative volume over the base volume. Used by machines with internal audio mixers (MSX++ OCM-PLD)
+    this.setVolumeFactor = function(factor) {
+        volume = baseVolume * factor;
+    };
+
+    var baseVolume;
 
     var sample72xCountDown = 9;              // 4 clocks out of 9 32x clocks. Count from 8 to 0 and misses every odd and the 8th clock
     var sample80xCountDown = 5;              // 2 clocks out of 5 32x clocks. Count from 4 to 0 and misses every even clock

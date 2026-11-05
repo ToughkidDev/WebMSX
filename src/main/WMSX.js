@@ -95,6 +95,7 @@ WMSX = {
     R800_CLOCK_MODE:                0,                          // 0: auto; (0..2]: R800 CPU clock multiplier;
     R800_TIMING:                    1,                          // 0: off, 1: on; 2: VDP waits only. Precise R800/S1990 timings. Turn off for faster and lighter emulation
     Z80_CLOCK_MODE:                 0,                          // 0: auto (soft-turbo possible); (0..8]: Z80 CPU clock multiplier;
+    OCM_DIP_SW:                     0x80,                       // MSX++ (OCM-PLD) physical DIP-SW 1-8 at bits 0-7 (1 = ON). Default: only DIP-SW8 (Internal MegaSD) ON
     Z80B_MODE:                      -1,                         // -1: user preference (default off); 0: off; 1: on. Z80B CPU at 5.37 MHz (master clock / 4). Always boots the Panasonic FS-A1WX
     VDP_CLOCK_MODE:                 0,                          // 0: auto (soft-turbo possible); (0..8]: VDP Command Engine clock multiplier; 9: instantaneous
     Z80_SOFT_TURBO_MULTI:           1.5,                        // 1..8 Z80 CPU clock multiplier when in AUTO mode and activated by software or CPU_SOFT_TURBO_AUTO_ON
@@ -143,6 +144,7 @@ WMSX.MACHINES_CONFIG = {
     MSX2PE:  { DESC:  "MSX2+ Europe (PAL)",         TYPE: 3, PRESETS: "_MSX2PE" },
     MSX2PJ:  { DESC:  "MSX2+ Japan (NTSC)",         TYPE: 3, PRESETS: "_MSX2PJ",  LANG: "ja" },
     FSA1WX:  { DESC:  "Panasonic FS-A1WX (Z80B)",   TYPE: 3, PRESETS: "_FSA1WX",  LANG: "ja" },
+    OCM:     { DESC:  "MSX++ OCM-PLD (1chipMSX)",   TYPE: 3, PRESETS: "_OCM",     LANG: "ja", OCM: true },
     MSX2A:   { DESC:  "MSX2 America (NTSC)",        TYPE: 2, PRESETS: "_MSX2A" },
     MSX2E:   { DESC:  "MSX2 Europe (PAL)",          TYPE: 2, PRESETS: "_MSX2E" },
     MSX2J:   { DESC:  "MSX2 Japan (NTSC)",          TYPE: 2, PRESETS: "_MSX2J",   LANG: "ja" },
@@ -266,6 +268,8 @@ WMSX.PRESETS_CONFIG = {
     MSXMUSEXTTR: { "EXTENSIONS_CONFIG.MSXMUSIC.URL": "@[MSXMUSIC]TR.rom", "EXTENSIONS_CONFIG.MSXMUSIC.SLOT": [0, 2], "EXTENSIONS_CONFIG.MSXMUSICX.SLOT": [3, 3] },
     KANJIDRVN:   { "EXTENSIONS_CONFIG.KANJI.BOUND": [ "KANJIDRV", "MSXJE" ] },
     KANJIDRVP:   { "EXTENSIONS_CONFIG.KANJI.BOUND": [ "MSXJE" ], "EXTENSIONS.KANJIDRV": 0 },
+    MSXMUSEXTOCM:{ "EXTENSIONS_CONFIG.MSXMUSIC.URL": "@[MSXMUSIC].rom",   "EXTENSIONS_CONFIG.MSXMUSIC.SLOT": [0, 2], "EXTENSIONS_CONFIG.MSXMUSICX.SLOT": [3, 3] },
+    KANJIDRVOCM: { "EXTENSIONS_CONFIG.KANJI.BOUND": [ ], "EXTENSIONS.KANJIDRV": 0, "EXTENSIONS.MSXJE": 0 },
     RAMN:        { "RAMMAPPER_SIZE": 512 },
     RAMTR:       { "RAMMAPPER_SIZE": 1024 },
 
@@ -323,6 +327,14 @@ WMSX.PRESETS_CONFIG = {
         _INCLUDE:           "_MSX2PBASE, KANJI",
         SLOT0P_URL:         "@MSX2P_JAP.bios",
         SLOT31_URL:         "@MSX2PEXT_JAP.bios | @KanjiBasic2PLogo_NTSC.bios",
+        BOOT_DURATION_AUTO: 380
+    },
+    _OCM: {
+        _INCLUDE:           "_MSX2PJ, MSXMUSEXTOCM, KANJIDRVOCM, NODISK",       // 1chipMSX: Slot 0 expanded, MSX-MUSIC at 0-2, no Floppy Drives
+        SLOT0P_URL:         null,
+        SLOT00_URL:         "@MSX2P_JAP.bios",
+        "EXTENSIONS.HARDDISK": 2,                                                // Internal MegaSD at Slot 3-2
+        RAMMAPPER_SIZE:     2048,                                               // Internal Mapper 2048 KB (DIP-SW7 OFF)
         BOOT_DURATION_AUTO: 380
     },
     _FSA1WX: {

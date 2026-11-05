@@ -12,8 +12,9 @@ wmsx.TurboDriver = function(bios) {
         machine = pMachine;
         ledsSocket = machine.getLedsSocket();
         var mt = machine.getMachineTypeSocket().getMachineType();
-        fakeTRTurbo = mt < M_TYPES.MSXTR && (WMSX.CPU_FAKE_TR_TURBO === 1 || (WMSX.CPU_FAKE_TR_TURBO === -1 && mt === M_TYPES.MSX2P));       // Auto ON for >= MSX2P, never for turbo R
-        panaTurbo =   mt < M_TYPES.MSXTR && (WMSX.CPU_PANA_TURBO === 1 || (WMSX.CPU_PANA_TURBO === -1 && mt === M_TYPES.MSX2P));             // Auto ON for >= MSX2P, never for turbo R
+        var ocmMachine = !!WMSX.MACHINES_CONFIG[WMSX.MACHINE].OCM;      // MSX++ (OCM-PLD) has its own Turbo devices
+        fakeTRTurbo = !ocmMachine && mt < M_TYPES.MSXTR && (WMSX.CPU_FAKE_TR_TURBO === 1 || (WMSX.CPU_FAKE_TR_TURBO === -1 && mt === M_TYPES.MSX2P));       // Auto ON for >= MSX2P, never for turbo R
+        panaTurbo =   !ocmMachine && mt < M_TYPES.MSXTR && (WMSX.CPU_PANA_TURBO === 1 || (WMSX.CPU_PANA_TURBO === -1 && mt === M_TYPES.MSX2P));             // Auto ON for >= MSX2P, never for turbo R
         updateSoftTurboDevices();
         this.turboModesUpdate();
     };
@@ -47,9 +48,11 @@ wmsx.TurboDriver = function(bios) {
 
         var z80Multi = z80Mode === 0 && softTurbo && softTurboON ? WMSX.Z80_SOFT_TURBO_MULTI : z80Mode > 0 ? z80Mode : 1;
         if (machine.getZ80BMode() && z80Multi < Z80B_MULTI) z80Multi = Z80B_MULTI;        // Z80B CPU runs at least at 5.37 MHz
+        var ocm = machine.getOCM();
+        if (z80Mode === 0 && ocm.isActive()) z80Multi = ocm.getZ80ClockMulti();
         machine.cpu.setZ80ClockMulti(z80Multi);
         machine.cpu.setR800ClockMulti(r800Mode);
-        machine.vdp.setVDPTurboMulti(vdpMode === 0 && softTurbo && softTurboON ? WMSX.VDP_SOFT_TURBO_MULTI : vdpMode > 0 ? vdpMode : 1);
+        machine.vdp.setVDPTurboMulti(vdpMode === 0 && ocm.isActive() ? (ocm.isVDPFast() ? 9 : 1) : vdpMode === 0 && softTurbo && softTurboON ? WMSX.VDP_SOFT_TURBO_MULTI : vdpMode > 0 ? vdpMode : 1);
 
         var r800Multi = machine.cpu.getR800ClockMulti();
         ledsSocket.ledStateChanged(3, z80Multi !== 1 ? 1 : 0);

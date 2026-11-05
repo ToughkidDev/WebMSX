@@ -44,8 +44,15 @@ wmsx.MachineTypeSocket = function(machine) {
         machine.powerOff();
         var wasPaused = machine.systemPause(true);
 
+        var wasOCM = !!WMSX.MACHINES_CONFIG[machine.machineName].OCM;
+        var hardDisk = WMSX.EXTENSIONS.HARDDISK;
+
         WMSX.MACHINE = name;
         wmsx.Configurator.applyFinalConfig();
+
+        // MSX++ (OCM-PLD) Internal MegaSD uses the Hard Drive Extension. Restore it when leaving the machine
+        if (!wasOCM && machineConfig.OCM) hardDiskBeforeOCM = hardDisk;
+        else if (wasOCM && !machineConfig.OCM) WMSX.EXTENSIONS.HARDDISK = hardDiskBeforeOCM;
 
         machine.updateMachineType();
 
@@ -79,5 +86,6 @@ wmsx.MachineTypeSocket = function(machine) {
 
 
     var listeners = [];
+    var hardDiskBeforeOCM = 0;
 
 };
